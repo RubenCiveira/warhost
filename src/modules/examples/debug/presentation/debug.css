@@ -1,0 +1,29 @@
+.map-lab { display: grid; gap: 20px; color: var(--text, #e4e7e8); background: var(--bg, #0e1113); font-family: inherit; line-height: 1.55; }
+.map-lab * { box-sizing: border-box; }
+.map-lab-heading { padding-bottom: 16px; border-bottom: 3px solid var(--accent, #f2a71b); }
+.map-lab-heading h1 { margin: 0; }
+.map-lab-heading p { max-width: 75ch; color: var(--muted, #8b959b); }
+.map-lab button { font: inherit; cursor: pointer; }
+.map-lab button:disabled { cursor: default; opacity: .55; }
+.map-lab-tabs button, .map-lab-sidebar button { padding: 10px 14px; border: 1px solid var(--border, #333b40); background: var(--surface-2, #1f2529); color: var(--text, #e4e7e8); }
+.map-lab button:focus-visible { outline: 3px solid var(--accent, #f2a71b); outline-offset: 2px; }
+.map-lab .map-muted { color: var(--muted, #8b959b); }
+.map-lab-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 24px; align-items: start; }
+.map-lab-layout > section { min-width: 0; }
+.map-lab-sidebar { display: grid; gap: 16px; }
+.map-lab-sidebar section { padding: 16px; background: var(--surface, #161a1d); border: 1px solid var(--border, #333b40); }
+.map-lab-sidebar h3 { margin-top: 0; }
+.map-lab-sidebar button { width: 100%; margin-top: 8px; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; color: var(--muted, #8b959b); font-size: 13px; }
+.map-lab-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.map-lab-tabs button[aria-pressed="true"] { outline: 2px solid var(--accent, #f2a71b); outline-offset: 2px; }
+@media (max-width: 760px) { .map-lab-layout { grid-template-columns: 1fr; } }
+.map-list { display: grid; gap: 0; }
+.map-list article { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--border, #333b40); }
+.map-list h2 { margin: 0; }
+.map-lab .map-list button, .map-settings button { padding: 10px 14px; background: var(--surface-2, #1f2529); color: var(--text, #e4e7e8); border: 1px solid var(--border, #333b40); }
+.map-settings { display: grid; gap: 12px; max-width: 480px; }
+.map-lab label { display: grid; gap: 5px; }
+.map-lab input, .map-lab select { width: 100%; min-width: 0; padding: 8px; font: inherit; color: var(--text, #e4e7e8); background: var(--surface-2, #1f2529); border: 1px solid var(--border, #333b40); }
+.map-error { border-left: 4px solid var(--danger, #d1493c); padding: 12px; }
+@media (max-width: 760px) { .map-list article { align-items: stretch; flex-direction: column; } }

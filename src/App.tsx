@@ -18,6 +18,7 @@ import CatalogBook from "./pages/catalog/CatalogBook";
 import RulesIndex from "./pages/rules/RulesIndex";
 import MissionCards from "./pages/missions/MissionCards";
 import HeroClasses from "./pages/heroClasses/HeroClasses";
+import { MapLab } from "./modules/examples/debug";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
+      <Route path="/maps" element={<main className="content"><MapLab /></main>} />
       <Route
         element={
           <RequireAccess>
@@ -48,6 +50,7 @@ export default function App() {
         <Route path="/reglas" element={<RulesIndex />} />
         <Route path="/misiones" element={<MissionCards />} />
         <Route path="/clases" element={<HeroClasses />} />
+        <Route path="/mapas" element={<MapLab />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test:maps": "node src/modules/examples/debug/tests/test-maps.mjs",
+    "test:maps:ui": "node src/modules/examples/debug/tests/test-maps-ui.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
