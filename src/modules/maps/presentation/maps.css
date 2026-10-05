@@ -11,3 +11,5 @@
 .map-board--hex .map-cell { position: absolute; width: 58px; height: 66px; min-width: 0; aspect-ratio: auto; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
 .map-board--hex .map-coordinate { top: 13px; left: 17px; }
 .map-board--hex .map-cell[aria-pressed="true"], .map-board--hex .map-cell:focus-visible { background-color: var(--accent, #f2a71b); color: var(--accent-ink, #141210); }
+.map-board .map-cell--wall { background: repeating-linear-gradient(45deg, var(--border, #333b40) 0 4px, var(--surface-2, #1f2529) 4px 8px); }
+.map-door-marker { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--accent, #f2a71b); background: var(--surface, #161a1d); font-size: 22px; line-height: 1; z-index: 1; }

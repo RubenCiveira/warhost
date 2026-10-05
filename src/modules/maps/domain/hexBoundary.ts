@@ -6,13 +6,11 @@ export function isClippedHex(map: Pick<MapDefinition, "grid" | "width" | "height
     (cell.y % 2 === 0 ? cell.x === 0 : cell.x === map.width - 1));
 }
 
-/** Makes clipped cells walls and removes items that can no longer occupy them. */
+/** Keeps scenery out of clipped walls without changing their underlying terrain. */
 export function alignHexBoundary(map: MapDefinition): MapDefinition {
   if (map.grid !== "hex") return map;
   const clipped = new Set(map.cells.filter(cell => isClippedHex(map, cell)).map(cell => cell.id));
   return { ...map,
-    cells: map.cells.map(cell => clipped.has(cell.id) ? { ...cell, terrain: "impassable" } : cell),
     places: map.places.filter(place => !clipped.has(place.cellId)),
-    exits: map.exits?.filter(id => !clipped.has(id)),
   };
 }

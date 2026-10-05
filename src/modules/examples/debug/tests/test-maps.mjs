@@ -9,7 +9,7 @@ const result = await build({
   },
   bundle: true, platform: "node", format: "esm", write: false,
 });
-const { createMapSession, updateMapSession, validateMaps, demoMaps, createMapDocument, paintMap, resizeMap, setMapStatus, loadMaps, saveMaps } = await import(
+const { createMapSession, updateMapSession, validateMaps, isCellBlocked, demoMaps, createMapDocument, paintMap, resizeMap, setMapStatus, loadMaps, saveMaps } = await import(
   `data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString("base64")}`
 );
 
@@ -58,7 +58,7 @@ const configured = setMapStatus(decorated, "configured", [decorated.definition])
 assert.throws(() => paintMap(configured, "0,0", "normal"));
 const resized = resizeMap(decorated, { ...settings, width: 2 });
 assert.equal(resized.definition.places.length, 0);
-assert.deepEqual(resized.definition.exits, ["0,1"]);
+assert.deepEqual(resized.definition.wallDoors[0].cellIds, ["0,1"]);
 assert.equal(paintMap(decorated, "2,1", "erase").definition.places.length, 0);
 let stored = null;
 const storage = { getItem: () => stored, setItem: (_key, value) => { stored = value; } };
@@ -72,15 +72,30 @@ assert.throws(() => loadMaps(storage));
 assert.throws(() => saveMaps({ setItem: () => { throw new Error("Quota"); } }, [draft]), /Quota/);
 console.log("Editor: terreno, atrezo, salidas, tamaños, bloqueo y persistencia correctos.");
 const hex = createMapDocument("hex-wall", { ...settings, width: 5, height: 5, grid: "hex" });
-assert.deepEqual(hex.definition.cells.filter(cell => cell.terrain === "impassable").map(cell => cell.id),
-  ["0,0", "1,0", "2,0", "3,0", "4,0", "4,1", "0,2", "4,3", "0,4", "1,4", "2,4", "3,4", "4,4"]);
-assert.throws(() => paintMap(hex, "0,2", "normal"), /recortado/);
-assert.throws(() => paintMap(hex, "4,1", "exit"), /recortado/);
+
+const wall = hex.definition.cells.find(cell => cell.id === "1,0");
+assert.equal(wall.terrain, "normal");
+assert.equal(isCellBlocked(hex.definition, hex.state, wall), true);
+assert.equal(paintMap(hex, "1,0", "difficult").definition.cells.find(cell => cell.id === "1,0").terrain, "difficult");
 assert.throws(() => paintMap(hex, "1,0", "prop"), /recortado/);
-const invalidWall = { ...hex.definition, cells: hex.definition.cells.map(cell => ({ ...cell, terrain: "normal" })) };
-assert.throws(() => validateMaps([invalidWall]), /recortados/);
-stored = JSON.stringify({ version: 1, maps: [{ ...hex, definition: invalidWall }] });
-assert.deepEqual(loadMaps(storage)[0].definition.cells, hex.definition.cells);
-const wider = resizeMap(hex, { ...settings, width: 6, height: 5, grid: "hex" });
-assert.equal(wider.definition.cells.find(cell => cell.id === "5,1").terrain, "impassable");
-console.log("Hexágonos: borde recortado, bloqueo y migración correctos.");
+const gate = paintMap(hex, "1,0", "exit", "", 3);
+assert.deepEqual(gate.definition.wallDoors[0].cellIds, ["1,0", "2,0", "3,0"]);
+assert.equal(isCellBlocked(gate.definition, gate.state, wall), true);
+const openGate = { ...gate.state, openedDoorIds: [gate.definition.wallDoors[0].id] };
+assert.equal(isCellBlocked(gate.definition, openGate, wall), false);
+assert.equal(isCellBlocked(gate.definition, openGate, { ...wall, terrain: "impassable" }), true);
+assert.throws(() => paintMap(gate, "2,0", "exit", "", 2), /superpuesta/);
+assert.throws(() => paintMap(hex, "4,0", "exit", "", 2), /no cabe/);
+assert.throws(() => paintMap(hex, "0,0", "exit", "", 0), /Ancho/);
+assert.throws(() => paintMap(gate, "2,0", "impassable"), /Retira/);
+assert.equal(paintMap(gate, "2,0", "erase").definition.wallDoors.length, 0);
+assert.equal(resizeMap(gate, { ...settings, width: 2, height: 5 }).definition.wallDoors.length, 0);
+saveMaps(storage, [gate]);
+assert.deepEqual(loadMaps(storage), [gate]);
+stored = JSON.stringify({ version: 1, maps: [{ ...hex, definition: { ...hex.definition,
+  cells: hex.definition.cells.map(cell => cell.id === wall.id ? { ...cell, terrain: "impassable" } : cell) } }] });
+assert.equal(loadMaps(storage)[0].definition.cells.find(cell => cell.id === wall.id).terrain, "normal");
+const explicitTerrain = paintMap(hex, "1,0", "impassable");
+saveMaps(storage, [explicitTerrain]);
+assert.equal(loadMaps(storage)[0].definition.cells.find(cell => cell.id === wall.id).terrain, "impassable");
+console.log("Muros y puertas: terreno independiente, ancho, cierre y migración correctos.");

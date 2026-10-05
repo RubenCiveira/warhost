@@ -1,4 +1,4 @@
-import { alignHexBoundary } from "../../../maps/domain/hexBoundary";
+import { alignHexBoundary, isClippedHex } from "../../../maps/domain/hexBoundary";
 import { validateMaps } from "../../../maps/domain/map";
 import type { MapDocument } from "../domain/mapDocument";
 
@@ -21,6 +21,9 @@ function isDocument(value: unknown): value is MapDocument {
     ["room", "corridor", "battlefield"].includes(String(map.kind)) &&
     (map.grid === undefined || map.grid === "square" || map.grid === "hex") &&
     (map.exits === undefined || strings(map.exits)) &&
+    (map.wallDoors === undefined || (Array.isArray(map.wallDoors) && map.wallDoors.every(door =>
+      record(door) && typeof door.id === "string" && strings(door.cellIds)))) &&
+    (value.state.openedDoorIds === undefined || strings(value.state.openedDoorIds)) &&
     Array.isArray(map.cells) && map.cells.every(cell => record(cell) && typeof cell.id === "string" &&
       typeof cell.x === "number" && typeof cell.y === "number" && ["normal", "difficult", "impassable"].includes(String(cell.terrain))) &&
     Array.isArray(map.places) && map.places.every(place => record(place) && typeof place.id === "string" &&
@@ -36,13 +39,17 @@ export function loadMaps(storage: Pick<Storage, "getItem">): MapDocument[] | nul
   const raw = storage.getItem(MAP_STORAGE_KEY);
   if (raw === null) return null;
   const data: unknown = JSON.parse(raw);
-  if (!record(data) || data.version !== 1 || !Array.isArray(data.maps) || !data.maps.every(isDocument)) {
+  if (!record(data) || (data.version !== 1 && data.version !== 2) || !Array.isArray(data.maps) || !data.maps.every(isDocument)) {
     throw new Error("Los mapas guardados tienen un formato incompatible.");
   }
   const maps = data.maps.map(document => {
-    const definition = alignHexBoundary(document.definition);
+    const definition = alignHexBoundary(data.version === 1 ? {
+      ...document.definition,
+      cells: document.definition.cells.map(cell => isClippedHex(document.definition, cell) ? { ...cell, terrain: "normal" } : cell),
+    } : document.definition);
     return { ...document, definition, state: {
       ...document.state,
+      openedDoorIds: document.state.openedDoorIds ?? [],
       openedChestIds: document.state.openedChestIds.filter(id => definition.places.some(place => place.id === id)),
       claimedObjectiveIds: document.state.claimedObjectiveIds.filter(id => definition.places.some(place => place.id === id)),
     } };
@@ -54,5 +61,5 @@ export function loadMaps(storage: Pick<Storage, "getItem">): MapDocument[] | nul
 /** Saves synchronously so callers can surface quota or permission failures. */
 export function saveMaps(storage: Pick<Storage, "setItem">, maps: readonly MapDocument[]): void {
   validateMaps(maps.map(document => document.definition));
-  storage.setItem(MAP_STORAGE_KEY, JSON.stringify({ version: 1, maps }));
+  storage.setItem(MAP_STORAGE_KEY, JSON.stringify({ version: 2, maps }));
 }

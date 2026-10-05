@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./debug.css";
-import { applyMapAction, createMapState, MapBoard, terrainLabels } from "../../../maps";
+import { applyMapAction, createMapState, isClippedHex, MapBoard, terrainLabels } from "../../../maps";
 import { createMapDocument, paintMap, resizeMap, setMapStatus } from "../domain/mapDocument";
 import type { MapDocument, MapTool } from "../domain/mapDocument";
 import { loadMaps, saveMaps } from "../infrastructure/mapStorage";
@@ -22,6 +22,7 @@ export default function MapLab() {
   const [creating, setCreating] = useState(false);
   const [selectedCellId, setSelectedCellId] = useState<string>();
   const [tool, setTool] = useState<MapTool | "inspect">("inspect");
+  const [doorWidth, setDoorWidth] = useState(1);
   const [propName, setPropName] = useState("Barril");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -84,10 +85,10 @@ export default function MapLab() {
         <div className="map-lab-layout">
           <section aria-label="Tablero">
             <p>{document.status === "draft" ? "Elige una herramienta y pulsa las casillas para aplicarla." : "Diseño bloqueado. Selecciona una casilla para explorar."}</p>
-            {map.grid === "hex" && <p className="map-muted">El borde se recorta para unir mapas. Los hexágonos partidos son muros impasables; el tamaño incluye esas casillas.</p>}
+            {map.grid === "hex" && <p className="map-muted">El borde se recorta para unir mapas. El muro bloquea los hexágonos partidos, salvo cuando una puerta se abra; el tamaño incluye esas casillas.</p>}
             <MapBoard map={map} state={document.state} selectedCellId={selectedCellId} onSelectCell={selected => {
               setSelectedCellId(selected.id);
-              if (document.status === "draft" && tool !== "inspect") attempt(() => update(paintMap(document, selected.id, tool, propName)));
+              if (document.status === "draft" && tool !== "inspect") attempt(() => update(paintMap(document, selected.id, tool, propName, doorWidth)));
             }} />
             <div className="map-legend"><span>≈ Difícil</span><span>× Impasable</span><span>◆ Atrezo</span><span>▯ Salida</span><span>▣ Cofre</span><span>⚑ Objetivo</span></div>
           </section>
@@ -103,7 +104,11 @@ export default function MapLab() {
                   <option value="erase">Retirar atrezo y salida</option>
                 </select></label>
                 {tool === "prop" && <label>Nombre del atrezo<input maxLength={100} value={propName} onChange={event => setPropName(event.target.value)} /></label>}
-                {tool === "exit" && <p>Coloca salidas en el borde. El destino se conectará más adelante.</p>}
+                {tool === "exit" && <>
+                  <label>Ancho de puerta<input type="number" min={1} max={40} value={doorWidth} onChange={event => setDoorWidth(Number(event.target.value))} /></label>
+                  <p>Coloca puertas en el muro, incluso en hexágonos partidos. El ancho se extiende a la derecha o hacia abajo; en las esquinas, a la derecha.</p>
+                  <p>Se crean cerradas. Más adelante las abrirán las miniaturas para revelar el mapa de destino.</p>
+                </>}
                 <p className="map-muted">Un elemento de atrezo por casilla. Colocar otro lo sustituye. El terreno se cambia por separado.</p>
               </section>
               {!map.doors.length && <section>
@@ -112,7 +117,7 @@ export default function MapLab() {
                   <MapSettingsForm key={JSON.stringify([map.width, map.height, map.kind, map.grid, map.name])}
                     initial={{ name: map.name, width: map.width, height: map.height, kind: map.kind, grid: map.grid ?? "square" }}
                     submitLabel="Aplicar configuración" onSubmit={settings => {
-                      if ((settings.width < map.width || settings.height < map.height || (settings.kind === "battlefield" && map.exits?.length)) &&
+                      if ((settings.width < map.width || settings.height < map.height || (settings.kind === "battlefield" && (map.exits?.length || map.wallDoors?.length))) &&
                           !window.confirm("Este cambio puede retirar casillas, atrezo y salidas. ¿Continuar?")) return;
                       attempt(() => { update(resizeMap(document, settings)); setSelectedCellId(undefined); setTool("inspect"); });
                     }} />
@@ -124,7 +129,9 @@ export default function MapLab() {
               {!cell && <p>Selecciona una casilla del tablero.</p>}
               {cell && <>
                 <p>Terreno: {terrainLabels[cell.terrain]}.</p>
-                {map.exits?.includes(cell.id) && <p>Puerta de salida sin destino asignado.</p>}
+                {isClippedHex(map, cell) && <p>El muro recorta y bloquea esta casilla, independientemente de su terreno.</p>}
+                {map.wallDoors?.filter(door => door.cellIds.includes(cell.id)).map(door => <p key={door.id}>Puerta cerrada · {door.cellIds.length} casillas de ancho. Apertura con miniaturas pendiente.</p>)}
+                {map.exits?.includes(cell.id) && <p>Puerta cerrada sin destino asignado. Apertura con miniaturas pendiente.</p>}
                 {map.places.filter(place => place.cellId === cell.id).map(place => <div key={place.id}>
                   <strong>{place.name}</strong>
                   {document.status === "configured" && place.kind !== "prop" && <button type="button"
@@ -134,10 +141,7 @@ export default function MapLab() {
                     }) }))}>{place.kind === "chest" ? "Abrir cofre" : "Controlar objetivo"}</button>}
                 </div>)}
                 {document.status === "configured" && map.doors.filter(door => door.ends.some(end => end.mapId === map.id && end.cellId === cell.id)).map(door => {
-                  const destination = door.ends.find(end => end.mapId !== map.id)!;
-                  return <button type="button" key={door.id} onClick={() => selectMap(destination.mapId, destination.cellId)}>
-                    Ir a {documents.find(item => item.definition.id === destination.mapId)?.definition.name}
-                  </button>;
+                  return <p key={door.id}>Puerta cerrada. El mapa de destino se revelará cuando una miniatura la abra.</p>;
                 })}
               </>}
             </section>
