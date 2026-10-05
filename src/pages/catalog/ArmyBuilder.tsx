@@ -588,7 +588,7 @@ export default function ArmyBuilder() {
           onClick={() => setPicking(false)}
         >
           {/* Pulsar dentro del panel no debe cerrarlo. */}
-          <div className="modal wide" onClick={(event) => event.stopPropagation()}>
+          <div className="modal wide wizard" onClick={(event) => event.stopPropagation()}>
             <header className="spread">
               <h2 style={{ margin: 0 }}>Unidades de {book.name}</h2>
               <button type="button" className="ghost tiny" onClick={() => setPicking(false)}>
@@ -601,35 +601,40 @@ export default function ArmyBuilder() {
               value={unitSearch}
               onChange={(event) => setUnitSearch(event.target.value)}
             />
-            <div className="ucard-grid picker-grid">
-              {visibleUnits.map((unit) => (
-                <UnitCard
-                  key={unit.$id}
-                  variant="catalogo"
-                  unitId={unit.unitId}
-                  glosario={glosario}
-                  onHabilidad={setHabilidad}
-                  miniaturaUrl={imagenesDe(unit).miniaturaUrl}
-                  lore={unit.lore}
-                  sections={sectionsForUnit(unit, packages)}
-                  unit={{
-                    name: unit.name,
-                    size: unit.size,
-                    quality: unit.quality,
-                    defense: unit.defense,
-                    cost: unit.cost,
-                    rules: unit.rules,
-                    loadout: baseLoadout(unit.weapons, unit.items),
-                  }}
-                  footer={
-                    <button type="button" className="primary tiny" onClick={() => addUnit(unit)}>
-                      Anadir {noun.toThe} {noun.singular}
-                    </button>
-                  }
-                />
-              ))}
-              {visibleUnits.length === 0 ? <p className="muted">Ninguna unidad coincide.</p> : null}
-            </div>
+            {visibleUnits.length === 0 ? (
+              <p className="muted">Ninguna unidad coincide.</p>
+            ) : (
+              <div className="army-strip">
+                {visibleUnits.map((unit) => (
+                  <div key={unit.$id} className="army-slide">
+                    <UnitCard
+                      variant="catalogo"
+                      formato="hoja"
+                      unitId={unit.unitId}
+                      glosario={glosario}
+                      onHabilidad={setHabilidad}
+                      miniaturaUrl={imagenesDe(unit).miniaturaUrl}
+                      lore={unit.lore}
+                      sections={sectionsForUnit(unit, packages)}
+                      unit={{
+                        name: unit.name,
+                        size: unit.size,
+                        quality: unit.quality,
+                        defense: unit.defense,
+                        cost: unit.cost,
+                        rules: unit.rules,
+                        loadout: baseLoadout(unit.weapons, unit.items),
+                      }}
+                      footer={
+                        <button type="button" className="primary tiny" onClick={() => addUnit(unit)}>
+                          Anadir {noun.toThe} {noun.singular}
+                        </button>
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       ) : null}
