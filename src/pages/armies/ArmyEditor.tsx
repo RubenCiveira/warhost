@@ -756,19 +756,19 @@ export default function ArmyEditor() {
     editandoIndice !== null ? entradasGuardadas[editandoIndice]?.bookKey || facActual : facActual;
 
   useEffect(() => {
-    if (libroActual) setTextoFaccion(libroActual.factionName ?? libroActual.name);
+    if (libroActual) setTextoFaccion(libroActual.name);
   }, [libroActual]);
 
   /** Al abrir el desplegable se ve todo; escribir lo va acotando. */
   const opcionesFiltradas = useMemo(() => {
     const needle = filtroFaccion.trim().toLowerCase();
     if (!needle) return faccionesDisponibles;
-    return faccionesDisponibles.filter((libro) => (libro.factionName ?? libro.name).toLowerCase().includes(needle));
+    return faccionesDisponibles.filter((libro) => [libro.name, libro.factionName ?? ""].some((texto) => texto.toLowerCase().includes(needle)));
   }, [faccionesDisponibles, filtroFaccion]);
 
   function seleccionarFaccion(libro: ArmyBook) {
     setFacSeleccionada(libro.$id);
-    setTextoFaccion(libro.factionName ?? libro.name);
+    setTextoFaccion(libro.name);
     setFacAbierta(false);
     setFiltroFaccion("");
     void registrarLibro(libro);
@@ -1694,7 +1694,7 @@ export default function ArmyEditor() {
                       className={libroDisponible.$id === facActual ? "active" : undefined}
                       onClick={() => seleccionarFaccion(libroDisponible)}
                     >
-                      {libroDisponible.factionName ?? libroDisponible.name}
+                      {libroDisponible.name}
                     </button>
                   ))
                 )}
@@ -1704,7 +1704,7 @@ export default function ArmyEditor() {
           <button
             type="button"
             className="fab"
-            title={facActual ? `Anadir unidad de ${libroActual?.factionName ?? libroActual?.name ?? ""}` : "Elegir faccion"}
+            title={facActual ? `Anadir unidad de ${libroActual?.name ?? ""}` : "Elegir faccion"}
             aria-label="Anadir una unidad"
             disabled={busy}
             onClick={(event) => {
