@@ -13,6 +13,23 @@ pnpm install
 pnpm dev
 ```
 
+### Desde VS Code
+
+Abre la carpeta padre `warhost` en VS Code. Tras instalar las dependencias y
+configurar `.env` como se indica arriba, pulsa **F5** y selecciona
+**Warhost React: iniciar y depurar**. La configuración de
+`../.vscode/launch.json` inicia Vite y abre Chrome con depuración cuando el
+servidor está listo en `http://localhost:5173/`. Puedes poner puntos de
+interrupción en los archivos TSX; Vite actualiza la página al guardar.
+
+Requiere Node.js disponible en VS Code y Google Chrome instalado. Utiliza los
+depuradores integrados de VS Code, sin extensiones adicionales. Para terminar,
+detén la sesión **Warhost React: iniciar y depurar**; también se detendrá la
+sesión de depuración del navegador.
+
+El puerto es fijo: si ya hay un `pnpm dev` usando el 5173, detén ese servidor
+antes de pulsar F5. El arranque es con F5, no al abrir la carpeta.
+
 Variables (`.env`):
 
 | Variable | Para que |
