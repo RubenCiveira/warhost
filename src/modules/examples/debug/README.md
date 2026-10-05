@@ -42,7 +42,7 @@ fallos de escritura se muestran sin aplicar el cambio.
 
 ## Verificación
 
-Desde `warhost-react`:
+Desde `warhost`:
 
 ```sh
 npm run test:maps

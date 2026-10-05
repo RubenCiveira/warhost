@@ -56,5 +56,5 @@ y pruebas están en `../examples/debug`. La dependencia es unidireccional:
 el laboratorio consume el mapa base y este no conoce el laboratorio.
 
 Las rutas de Warhost `/maps` y `/mapas` montan ese módulo externo.
-Las pruebas se ejecutan desde `warhost-react` con `npm run test:maps` y
+Las pruebas se ejecutan desde `warhost` con `npm run test:maps` y
 `npm run test:maps:ui`.
