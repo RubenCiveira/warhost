@@ -14,7 +14,6 @@ function linksFor(system: GameSystem | null | undefined) {
     { to: "/facciones", label: "Facciones" },
     { to: "/reglas", label: "Reglas" },
     { to: "/misiones", label: "Misiones" },
-    { to: "/mapas", label: "Mapas" },
     ...(isQuestSystem(system?.id) ? [{ to: "/clases", label: "Clases" }] : []),
   ];
 }
