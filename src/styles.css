@@ -1665,11 +1665,24 @@ fieldset.desnudo { border: 0; padding: 0; margin: 0; min-width: 0; }
    unidad, pero sin alto fijo para poder llevar el texto completo. */
 .print-libro { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); justify-items: center; }
 .print-unidad { display: contents; }
+/* En pantalla, el libro se ve como el papel que va a salir: hoja blanca de
+   A4 de ancho con su margen y un borde suave, sea cual sea el tema. */
+@media screen {
+  .print-libro {
+    width: 210mm; max-width: 100%; margin: 0 auto; padding: 10mm; box-sizing: border-box;
+    background: #fff; color: #111; border: 1px solid #d4d4d4; border-radius: 2px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.12);
+  }
+}
 .print-faccion-titulo {
   width: min(100%, 190mm); padding: 4mm 0 2mm; border-bottom: 0.5mm solid var(--border-strong);
   margin-bottom: 2mm; color: #111;
 }
 .print-faccion-titulo h1 { margin: 0; font-size: 8mm; line-height: 1; letter-spacing: 0.02em; }
+.print-faccion-bloque { margin-top: 4mm; }
+.print-faccion-bloque h2 { margin: 0; font-size: 5.5mm; line-height: 1.1; }
+.print-ejercito-subtitulo { margin: 1.5mm 0 0; font-size: 4.5mm; font-weight: 600; }
+.print-ejercito-resumen { margin: 1.5mm 0 0; font-size: 3.4mm; }
 .print-faccion-cover {
   width: 100%; max-height: 82mm; object-fit: cover; object-position: center;
   margin-top: 4mm; border: 0.5mm solid #000; border-radius: 2mm;

@@ -469,12 +469,29 @@ function tarjetasDeUnidadLibro(
   ];
 }
 
+function plural(cantidad: number, singular: string, plural: string): string {
+  return `${cantidad} ${cantidad === 1 ? singular : plural}`;
+}
+
+function ResumenEjercito({ units }: { units: ResolvedUnit[] }) {
+  const puntos = units.reduce((total, unit) => total + unit.cost, 0);
+  const miniaturas = units.reduce((total, unit) => total + unit.size, 0);
+  return (
+    <p className="print-ejercito-resumen">
+      {[plural(puntos, "punto", "puntos"), plural(units.length, "unidad", "unidades"), plural(miniaturas, "miniatura", "miniaturas")].join(" · ")}
+    </p>
+  );
+}
+
 /**
  * Modo libro: tarjetas grandes de unidad con el texto completo de cada regla.
  * Fluyen una detras de otra para llenar cada pagina; si una se estima mas
- * alta que una pagina, se divide en dos tarjetas marcadas.
+ * alta que una pagina, se divide en dos tarjetas marcadas. Encabeza el
+ * nombre con sus totales; con aliados, cada faccion abre su propio bloque
+ * con los suyos, y con una sola la faccion va de subtitulo sin repetirlos.
  */
 function VistaLibro({
+  nombre,
   units,
   glosario,
   librosConocidos,
@@ -482,6 +499,7 @@ function VistaLibro({
   puedeLanzarHechizos,
   noun,
 }: {
+  nombre: string;
   units: ResolvedUnit[];
   glosario: Map<string, CatalogRule>;
   librosConocidos: ArmyBook[];
@@ -493,37 +511,53 @@ function VistaLibro({
   // `bookKey` en sus unidades. Con una sola faccion conocida no hay
   // ambiguedad: son todas suyas.
   const defaultBookKey = librosConocidos.length === 1 ? librosConocidos[0].$id : undefined;
-  const tarjetas = useMemo(
-    () =>
-      agruparUnidades(units).flatMap((seccion) =>
+  const bloques = useMemo(() => {
+    const libroDe = (unit: ResolvedUnit) => librosConocidos.find((libro) => (unit.bookKey ?? defaultBookKey) === libro.$id);
+    const tarjetasDe = (unidades: ResolvedUnit[]) =>
+      agruparUnidades(unidades).flatMap((seccion) =>
         seccion.unidades.flatMap((unit) =>
-          tarjetasDeUnidadLibro(
-            unit,
-            glosario,
-            librosConocidos.find((libro) => (unit.bookKey ?? defaultBookKey) === libro.$id),
-            avatarDe?.(unit) ?? null,
-            puedeLanzarHechizos,
-          ),
+          tarjetasDeUnidadLibro(unit, glosario, libroDe(unit), avatarDe?.(unit) ?? null, puedeLanzarHechizos),
         ),
-      ),
-    [avatarDe, defaultBookKey, glosario, librosConocidos, puedeLanzarHechizos, units],
-  );
+      );
+    if (librosConocidos.length <= 1) return [{ key: "todas", libro: librosConocidos[0], units, tarjetas: tarjetasDe(units) }];
+    const porLibro = librosConocidos.map((libro) => ({ key: libro.$id, libro: libro as ArmyBook | undefined, units: units.filter((unit) => libroDe(unit) === libro) }));
+    const sinLibro = units.filter((unit) => !libroDe(unit));
+    return [...porLibro, { key: "sin-faccion", libro: undefined, units: sinLibro }]
+      .filter((bloque) => bloque.units.length > 0)
+      .map((bloque) => ({ ...bloque, tarjetas: tarjetasDe(bloque.units) }));
+  }, [avatarDe, defaultBookKey, glosario, librosConocidos, puedeLanzarHechizos, units]);
 
   if (units.length === 0) return <p className="muted">{noun.demonstrativeCap} {noun.singular} no tiene unidades que imprimir.</p>;
 
+  const variasFacciones = librosConocidos.length > 1;
   return (
     <div className="print-libro">
-      {tarjetas.map((tarjeta) => (
-        <FichaUnidadLibro
-          key={tarjeta.key}
-          unit={tarjeta.unit}
-          glosario={glosario}
-          libro={tarjeta.libro}
-          avatarUrl={tarjeta.avatarUrl}
-          miniaturaUrl={tarjeta.miniaturaUrl}
-          parte={tarjeta.parte}
-          puedeLanzarHechizos={puedeLanzarHechizos}
-        />
+      <header className="print-faccion-titulo">
+        <h1>{nombre || noun.singular}</h1>
+        {!variasFacciones && librosConocidos[0] ? <p className="print-ejercito-subtitulo">{librosConocidos[0].name}</p> : null}
+        <ResumenEjercito units={units} />
+      </header>
+      {bloques.map((bloque) => (
+        <section key={bloque.key} className="print-unidad">
+          {variasFacciones ? (
+            <header className="print-faccion-titulo print-faccion-bloque">
+              <h2>{bloque.libro?.name ?? "Sin faccion"}</h2>
+              <ResumenEjercito units={bloque.units} />
+            </header>
+          ) : null}
+          {bloque.tarjetas.map((tarjeta) => (
+            <FichaUnidadLibro
+              key={tarjeta.key}
+              unit={tarjeta.unit}
+              glosario={glosario}
+              libro={tarjeta.libro}
+              avatarUrl={tarjeta.avatarUrl}
+              miniaturaUrl={tarjeta.miniaturaUrl}
+              parte={tarjeta.parte}
+              puedeLanzarHechizos={puedeLanzarHechizos}
+            />
+          ))}
+        </section>
       ))}
     </div>
   );
@@ -694,6 +728,7 @@ export default function ArmyPrintView({
         </div>
       ) : modo === "libro" ? (
         <VistaLibro
+          nombre={nombre}
           units={units}
           glosario={glosario}
           librosConocidos={librosConocidos}
