@@ -5,6 +5,7 @@ import RequiereCobertura from "./components/RequiereCobertura";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Verify from "./pages/Verify";
+import OAuth from "./pages/OAuth";
 import Home from "./pages/Home";
 import ArmyList from "./pages/armies/ArmyList";
 import ArmyEditor from "./pages/armies/ArmyEditor";
@@ -27,6 +28,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
+      <Route path="/oauth" element={<OAuth />} />
       <Route path="/maps" element={<main className="content"><MapLab /></main>} />
       <Route
         element={

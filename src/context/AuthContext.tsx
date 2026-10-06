@@ -87,9 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const loginWithGoogle = useCallback(() => {
-    account.createOAuth2Session({
+    account.createOAuth2Token({
       provider: OAuthProvider.Google,
-      success: `${window.location.origin}${import.meta.env.BASE_URL}`,
+      success: `${window.location.origin}${import.meta.env.BASE_URL}oauth`,
       failure: `${window.location.origin}${import.meta.env.BASE_URL}login?error=oauth`,
     });
   }, []);
