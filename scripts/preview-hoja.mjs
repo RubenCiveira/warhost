@@ -3,7 +3,7 @@
  * Elige las unidades con mas opciones de configuracion, que son las que
  * deciden si la caja sirve.
  *
- *   pnpm preview:hoja [bookKey]
+ *   [TEMA=grimdark|fantasy] pnpm preview:hoja [bookKey] [nombres…]
  */
 import { build } from "esbuild";
 import { ALIAS_OPR_KIT } from "./alias-opr-kit.mjs";
@@ -17,6 +17,8 @@ const CLI_CWD = process.env.APPWRITE_DIR ?? "../warhost-appwrite";
 const BOOK = process.argv[2] ?? "rvvb3kdn2x2pqkki_gf";
 /** Con nombres, dibuja esas unidades en vez de las que mas opciones tienen. */
 const PEDIDAS = process.argv.slice(3);
+/** Por entorno: los argumentos ya son el libro y los nombres de unidad. */
+const TEMA = process.env.TEMA ?? "grimdark";
 const SALIDA = process.env.PREVIEW_OUT ?? join(tmpdir(), "warhost-hoja.png");
 const filas = (t, q) =>
   JSON.parse(execFileSync("appwrite", ["tables-db", "list-rows", "--database-id", "warhost", "--table-id", t, "--json",
@@ -60,7 +62,7 @@ const { createRequire } = await import("node:module");
 createRequire(import.meta.url)(salidaJs);
 
 const html = join(dir, "hoja.html");
-await writeFile(html, `<!doctype html><html lang="es" data-setting="grimdark"><head><meta charset="utf-8">
+await writeFile(html, `<!doctype html><html lang="es" data-setting="${TEMA}"><head><meta charset="utf-8">
   <style>${readFileSync("src/modules/opr-kit/styles.css", "utf8")}</style><style>${readFileSync("src/styles.css", "utf8")}</style>
   <style>body{padding:20px;display:flex;flex-direction:column;gap:16px;align-items:flex-start}</style>
   </head><body>${globalThis.__HTML__}</body></html>`);
@@ -69,6 +71,8 @@ const { chromium } = await import("playwright");
 const nav = await chromium.launch({ channel: "chrome" });
 const p = await nav.newPage({ viewport: { width: 1400, height: 1100 }, deviceScaleFactor: 2 });
 await p.goto(`file://${html}`);
+// Sin esperar a las fuentes se mide y se fotografia la de reserva del sistema.
+await p.evaluate(() => document.fonts.ready);
 const recortes = await p.evaluate(() =>
   [...document.querySelectorAll(".ucard.hoja")].map((c) => ({
     nombre: c.querySelector(".ucard-title")?.textContent ?? "?",

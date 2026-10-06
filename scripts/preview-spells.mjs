@@ -57,6 +57,8 @@ const { chromium } = await import("playwright");
 const navegador = await chromium.launch({ channel: "chrome" });
 const pagina = await navegador.newPage({ viewport: { width: 1180, height: 900 }, deviceScaleFactor: 2 });
 await pagina.goto(`file://${html}`);
+// Sin esperar a las fuentes se mide y se fotografia la de reserva del sistema.
+await pagina.evaluate(() => document.fonts.ready);
 // Igual que en las unidades: lo que no cabe en una caja fija desaparece callado.
 const recortes = await pagina.evaluate(() =>
   [...document.querySelectorAll(".scard")]

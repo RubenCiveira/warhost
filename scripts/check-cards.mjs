@@ -1,7 +1,8 @@
 /**
  * Pasa TODAS las unidades y hechizos de varios libros por su carta y avisa de
  * los que se recortan. Con una caja de tamano fijo, lo que no cabe desaparece en silencio:
- * mirar tres cartas no vale, hay que preguntarle al navegador por todas.
+ * mirar tres cartas no vale, hay que preguntarle al navegador por todas, y en
+ * las dos ambientaciones, que no comparten tipografia de rotulos.
  *
  *   pnpm check:cards [nLibros]
  */
@@ -132,7 +133,17 @@ const { chromium } = await import("playwright");
 const navegador = await chromium.launch({ channel: "chrome" });
 const p = await navegador.newPage({ viewport: { width: 900, height: 900 } });
 await p.goto(`file://${pagina}`);
-const malas = await p.evaluate(() => {
+// Cada ambientacion tiene su tipografia de rotulos, y una carta que cabe con
+// una puede no caber con la otra: se mide la misma pagina con las dos. Antes de
+// medir hay que esperar a las fuentes, o se mide la de reserva del sistema; el
+// `offsetHeight` fuerza el estilo nuevo para que empiecen a cargar las del tema.
+const ponerTema = (tema) =>
+  p.evaluate(async (t) => {
+    document.documentElement.dataset.setting = t;
+    void document.body.offsetHeight;
+    await document.fonts.ready;
+  }, tema);
+const recortadas = () => p.evaluate(() => {
   const mirar = (selector, titulo, zonas, tipo) =>
     [...document.querySelectorAll(selector)].map((carta) => ({
       tipo,
@@ -156,6 +167,14 @@ const malas = await p.evaluate(() => {
     ...mirar(".ucard.hoja", ".ucard-title", ".ucard-opciones-dentro, .ucard-body", "ficha"),
   ].filter((c) => c.sobra > 1);
 });
+const TEMAS = ["grimdark", "fantasy"];
+const malas = [];
+for (const tema of TEMAS) {
+  await ponerTema(tema);
+  malas.push(...(await recortadas()).map((c) => ({ ...c, tema })));
+}
+// UNA y MEDIR calibran el modelo de `pasoDeOpciones`, que se ajusto en grimdark.
+await ponerTema("grimdark");
 // Contar por tipo: ahora hay tres piezas distintas en la pagina y sumarlas
 // todas y restar hacia atras daba cifras falsas.
 // MEDIR=1 vuelca las alturas reales de cada ficha a /tmp/medidas.json, que es
@@ -248,10 +267,11 @@ console.log(
       .join(" · "),
 );
 if (malas.length === 0) {
-  console.log("Ninguna carta se recorta.");
+  console.log(`Ninguna carta se recorta (${TEMAS.join(" ni ")}).`);
 } else {
-  console.log(`${malas.length} se recortan (${((malas.length / reparto) * 100).toFixed(1)}%):`);
-  for (const c of malas.slice(0, 12)) console.log(`  [${c.tipo}] ${c.nombre.padEnd(28)} ${c.densidad.padEnd(10)} sobran ${c.sobra} px`);
+  const medidas = reparto * TEMAS.length;
+  console.log(`${malas.length} se recortan de ${medidas} medidas en ${TEMAS.join(" y ")} (${((malas.length / medidas) * 100).toFixed(1)}%):`);
+  for (const c of malas.slice(0, 12)) console.log(`  [${c.tema}] [${c.tipo}] ${c.nombre.padEnd(28)} ${c.densidad.padEnd(10)} sobran ${c.sobra} px`);
   if (malas.length > 12) console.log(`  … y ${malas.length - 12} mas`);
 }
 process.exit(malas.length === 0 ? 0 : 1);

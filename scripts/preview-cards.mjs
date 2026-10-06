@@ -105,6 +105,8 @@ const { chromium } = await import("playwright");
 const navegador = await chromium.launch({ channel: "chrome" });
 const pagina = await navegador.newPage({ viewport: { width: 1000, height: 1200 }, deviceScaleFactor: 2 });
 await pagina.goto(`file://${html}`);
+// Sin esperar a las fuentes se mide y se fotografia la de reserva del sistema.
+await pagina.evaluate(() => document.fonts.ready);
 // Con tamano fijo lo que no cabe se recorta en silencio: hay que preguntarlo.
 const recortes = await pagina.evaluate(() =>
   [...document.querySelectorAll(".ucard")].map((carta) => {
