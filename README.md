@@ -87,15 +87,21 @@ Su CSS se importa en `src/main.tsx` antes que `styles.css`, y las variables
 principio de `styles.css`. Las imagenes no las busca el paquete: las resuelve
 quien pinta la vista (`avatarDe`, `miniaturaDe`, `coverUrl`).
 
-Para tocar el paquete y probarlo aqui sin publicarlo, clonalo al lado y
-enlazalo. `pnpm link` anade un `overrides` a `package.json` y al lockfile que no
-hay que subir: para volver a la version publicada, quitalo y `pnpm install`.
+No hace falta publicar el paquete para probar un cambio aqui: basta con
+publicarlo cuando el despliegue, que instala desde npm, tenga que llevarlo.
+Para usar tu copia local, clonala al lado y enlazala:
 
 ```bash
 git clone https://github.com/RubenCiveira/opr-kit ../opr-kit
 (cd ../opr-kit && pnpm install && pnpm build --watch) &
-pnpm link ../opr-kit
+pnpm kit:local   # node_modules apunta a ../opr-kit
+pnpm kit:npm     # vuelta a la version publicada
 ```
+
+`kit:local` solo cambia el enlace dentro de `node_modules`: no toca
+`package.json` ni el lockfile, asi que no hay nada que no subir. Cualquier
+`pnpm install` o `pnpm add` lo deshace y vuelve a la version publicada; basta
+con repetir `pnpm kit:local`.
 
 Enlazado, el paquete veria su propia copia de React y dos copias rompen los
 hooks: por eso `vite.config.ts` tiene `resolve.dedupe` y los scripts que pintan

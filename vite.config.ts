@@ -6,7 +6,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig(({ command }) => ({
   base: command === "build" ? "/warhost/" : "/",
   plugins: [react()],
-  // Con `pnpm link ../opr-kit` el paquete resolveria su propia copia de React,
+  // Con `pnpm kit:local` el paquete resolveria su propia copia de React,
   // y dos copias rompen los hooks: se fuerza siempre la de la aplicacion.
   resolve: { dedupe: ["react", "react-dom"] },
   server: { port: 5173 },
