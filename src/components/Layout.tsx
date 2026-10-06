@@ -5,14 +5,12 @@ import { useGameSystem } from "../context/GameSystemContext";
 import { SETTINGS, armyNounFor, isQuestSystem, systemsFor } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { GameSystem, GameSystemId } from "@rubenciveira/opr-kit/core/gameSystems";
 
+// Al inicio se vuelve con el logo. Partidas, asociaciones y reglas estan
+// ocultas por ahora: sus rutas siguen en App.tsx, pero no se enlazan.
 function linksFor(system: GameSystem | null | undefined) {
   return [
-    { to: "/", label: "Inicio", end: true },
     { to: "/ejercitos", label: armyNounFor(system).pluralCap },
-    { to: "/partidas", label: "Partidas" },
-    { to: "/asociaciones", label: "Asociaciones" },
     { to: "/facciones", label: "Facciones" },
-    { to: "/reglas", label: "Reglas" },
     { to: "/misiones", label: "Misiones" },
     ...(isQuestSystem(system?.id) ? [{ to: "/clases", label: "Clases" }] : []),
   ];
@@ -170,7 +168,7 @@ function MobileNav() {
         <div className="nav-drawer-backdrop">
           <nav className="nav-drawer" aria-label="Secciones">
             {linksFor(system).map((link) => (
-              <NavLink key={link.to} to={link.to} end={link.end} onClick={() => setOpen(false)}>
+              <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)}>
                 {link.label}
               </NavLink>
             ))}
@@ -193,12 +191,12 @@ export default function Layout() {
     <div className="app">
       <header className="topbar">
         <MobileNav />
-        <NavLink to="/" className="brand">
+        <NavLink to="/" end className="brand" aria-label="Warhost: ir al inicio">
           War<span>host</span>
         </NavLink>
         <nav>
           {linksFor(system).map((link) => (
-            <NavLink key={link.to} to={link.to} end={link.end}>
+            <NavLink key={link.to} to={link.to}>
               {link.label}
             </NavLink>
           ))}
