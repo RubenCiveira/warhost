@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "pnpm -C ../opr-kit build && pnpm kit:local && vite",
+    "dev:repository": "pnpm kit:npm && vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",

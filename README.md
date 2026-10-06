@@ -93,10 +93,15 @@ Para usar tu copia local, clonala al lado y enlazala:
 
 ```bash
 git clone https://github.com/RubenCiveira/opr-kit ../opr-kit
-(cd ../opr-kit && pnpm install && pnpm build --watch) &
-pnpm kit:local   # node_modules apunta a ../opr-kit
-pnpm kit:npm     # vuelta a la version publicada
+(cd ../opr-kit && pnpm install)
+pnpm dev:local        # compila ../opr-kit, lo enlaza y arranca Vite
+pnpm dev:repository   # vuelve a la version publicada y arranca Vite
 ```
+
+`dev:local` compila el paquete una vez al arrancar. Si vas a tocarlo mientras
+Warhost corre, deja `pnpm build --watch` abierto en `../opr-kit` y Vite recarga
+al guardar. Sin arrancar el servidor, `pnpm kit:local` y `pnpm kit:npm` solo
+cambian el enlace.
 
 `kit:local` solo cambia el enlace dentro de `node_modules`: no toca
 `package.json` ni el lockfile, asi que no hay nada que no subir. Cualquier
