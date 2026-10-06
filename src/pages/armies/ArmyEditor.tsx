@@ -1485,7 +1485,7 @@ export default function ArmyEditor() {
           </div>
         )
       ) : units.length > 0 ? (
-        <div className="army-strip">
+        <div className="army-strip vertical-movil">
           {agruparUnidades(filasEjercito).map((seccion) => (
             <Fragment key={seccion.grupo}>
               <div className="army-divider" role="separator" aria-label={seccion.etiqueta}>

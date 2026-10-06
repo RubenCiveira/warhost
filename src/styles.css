@@ -749,6 +749,9 @@ fieldset.desnudo { border: 0; padding: 0; margin: 0; min-width: 0; }
   .army-bar { top: 50px; }
 }
 .army-bar-main { flex: 1 1 220px; min-width: 0; }
+/* El aviso de composicion va al lado del nombre, no debajo. */
+.army-bar-main > .row { flex-wrap: nowrap; }
+.army-bar-name { flex: 1 1 auto; min-width: 0; }
 .army-bar-name {
   width: 100%; padding: 2px 0; background: transparent; border: none;
   font-family: var(--label-font);
@@ -809,6 +812,71 @@ fieldset.desnudo { border: 0; padding: 0; margin: 0; min-width: 0; }
   .army-divider { scroll-snap-align: start; }
 }
 
+/* Movil: en la vista del ejercito las cartas pasan a vertical. Solo en la
+   tira de unidades del editor (`.vertical-movil`): la vista de impresion y el
+   PDF, que se fotografia de la pantalla en la que se genere, siguen en su
+   formato de papel. La carta deja su tamano fijo y su `transform`, ocupa el
+   ancho y crece lo que necesite; `zoom`, a diferencia de `transform`, si
+   ocupa sitio, y lleva sus medidas en mm a una letra que se lee en un movil. */
+@media (max-width: 640px) {
+  .army-strip.vertical-movil {
+    flex-direction: column; align-items: stretch; gap: 14px;
+    overflow-x: visible; scroll-snap-type: none; padding: 0 0 16px;
+  }
+  .vertical-movil .army-slide { width: 100%; }
+  .vertical-movil .army-divider {
+    writing-mode: horizontal-tb; flex-direction: row; justify-content: space-between;
+    min-height: 0; padding: 8px 12px; border-inline: 0; border-bottom: 3px solid var(--band-rule);
+  }
+  .vertical-movil :is(.ucard-wrap, .ucard-frame) { width: auto; height: auto; overflow: visible; }
+  .vertical-movil .ucard {
+    zoom: 1.35; width: auto; height: auto; transform: none;
+  }
+
+  /* Cabecera: el nombre entero en su renglon, los atributos debajo a todo el ancho. */
+  .vertical-movil .ucard-head { flex-wrap: wrap; row-gap: 0.8mm; }
+  .vertical-movil .ucard-title {
+    flex: 1 1 100%; padding: 1.4mm 2mm; border-radius: 0.8mm;
+    white-space: normal; overflow: visible;
+  }
+  .vertical-movil .ucard-avatar { height: auto; min-height: 9.8mm; }
+  .vertical-movil .ucard-stats { flex: 1 1 0; }
+  .vertical-movil .ucard-stat { flex: 1 1 0; width: auto; }
+  .vertical-movil .ucard-stat:first-child { border-radius: 0.8mm 0 0 0.8mm; }
+
+  /* Lo que en la tarot va lado a lado, aqui va uno encima de otro. */
+  .vertical-movil .ucard-body-par { flex-direction: column; }
+  .vertical-movil .ucard-columna + .ucard-columna { border-left: 0; border-top: 0.35mm solid var(--ucard-filete); }
+  .vertical-movil .ucard-quest-cols { flex-direction: column; }
+  .vertical-movil .ucard-quest-atributos { flex: none; }
+  .vertical-movil .ucard-personaje { grid-template-rows: none; }
+  .vertical-movil .ucard-personaje-arriba { grid-template-columns: 1fr; }
+  .vertical-movil .ucard-body { padding-bottom: 2.4mm; }
+
+  /* Con el dedo: chips y botones con algo mas de cuerpo. */
+  .vertical-movil .ucard-chip { padding: 1mm 1.8mm; }
+  .vertical-movil .ucard-accion { padding-top: 2.4mm; gap: 2mm; }
+  .vertical-movil .ucard .ucard-accion button { font-size: 2.6mm; padding: 1.6mm 3.4mm; }
+
+  /* La cabecera del ejercito: compacta y fuera de la pantalla al hacer
+     scroll; la barra superior ya se queda arriba. */
+  .army-bar {
+    position: static; gap: 8px 12px; padding: 10px 12px; margin-bottom: 12px;
+  }
+  .army-bar-main { flex-basis: 100%; }
+  .army-bar-name { font-size: 1.2rem; padding: 0; }
+  .army-bar-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Cada casilla mide su rotulo: antes dos renglones que un rotulo cortado. */
+  .army-bar-stats { flex: 1 1 100%; flex-wrap: wrap; gap: 4px; }
+  .army-stat { flex: 1 1 0; min-width: min-content; padding: 3px 5px; }
+  .army-stat-key { font-size: 0.7rem; letter-spacing: 0.03em; white-space: nowrap; }
+  :root[data-setting="fantasy"] .army-stat-key { letter-spacing: 0; font-weight: 500; }
+  .army-stat-value, .army-stat-input input { font-size: 1rem; }
+  .army-stat-input input { width: 100%; }
+  .army-bar-actions { flex: 1 1 100%; justify-content: flex-end; }
+  .army-bar-actions button { padding: 7px 12px; }
+}
+
 /* La misma tira, pero en columna: las fichas de unidad de una faccion se leen
    de arriba abajo con el scroll de la pagina, sin carrusel lateral. */
 .army-column {
@@ -844,7 +912,7 @@ fieldset.desnudo { border: 0; padding: 0; margin: 0; min-width: 0; }
 }
 .army-divider-count {
   writing-mode: horizontal-tb;
-  font-size: 0.8rem; color: var(--accent);
+  font-size: 0.8rem; color: var(--band-accent);
   border: 1px solid currentColor; padding: 1px 6px;
 }
 
@@ -975,9 +1043,11 @@ fieldset.desnudo { border: 0; padding: 0; margin: 0; min-width: 0; }
 /* Grimdark: el canto superior derecho matado. `corner-shape` lleva el borde
    por la diagonal sin recortar a los hijos, que es lo que haria `clip-path`
    con el aviso de composicion o el menu de la barra de ejercito. Sin soporte,
-   el canto se queda vivo, que es el aspecto de siempre. */
+   el canto se queda vivo, que es el aspecto de siempre. Solo en piezas de
+   borde uniforme: con un borde de otro grosor y color (la regla de la barra
+   de ejercito, la de arriba del modal) Chrome pinta una linea suelta arriba. */
 @supports (corner-shape: bevel) {
-  :root:not([data-setting="fantasy"]) :is(.card, .unit, .banner, .modal, .army-bar) {
+  :root:not([data-setting="fantasy"]) :is(.card, .unit, .banner) {
     border-top-right-radius: var(--bevel); corner-shape: bevel;
   }
   :root:not([data-setting="fantasy"]) :is(button.primary, a.button-link, .tag.accent, .fab) {
