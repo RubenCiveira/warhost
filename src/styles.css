@@ -1150,6 +1150,71 @@ fieldset.desnudo { border: 0; padding: 0; margin: 0; min-width: 0; }
 }
 
 
+/* Modo partida -------------------------------------------------------------- */
+
+/* Toda la ventana para la carta: arriba la barra para salir, en medio la
+   carta escalada al hueco (la escala la pone `ModoPartida`), abajo el mazo
+   plegado. */
+.partida {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; grid-template: auto minmax(0, 1fr) auto / minmax(0, 1fr);
+  height: 100dvh;
+  background: var(--bg); color: var(--text);
+}
+.partida-barra {
+  display: flex; align-items: center; gap: 8px;
+  padding: max(8px, env(safe-area-inset-top)) 12px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.partida-titulo {
+  flex: 1; min-width: 0; margin: 0;
+  font-family: var(--heading-font); font-size: 1.1rem;
+  text-transform: var(--heading-transform); letter-spacing: var(--heading-letter);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.partida-volver { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.partida-escena { overflow: auto; display: grid; place-items: center; padding: 12px; }
+.partida-mazo {
+  position: relative;
+  border-top: 1px solid var(--border-strong);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--surface);
+}
+.partida-mazo button {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  border: 0; border-radius: 0; background: transparent; text-align: left;
+  padding: 12px 16px;
+}
+.partida-mazo button.activa { background: var(--accent); color: var(--accent-ink); }
+.partida-mazo-actual { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Desplegado sube sobre la carta en vez de empujarla: la carta no se reescala
+   cada vez que se abre el mazo. */
+.partida-mazo-lista {
+  position: absolute; left: 0; right: 0; bottom: 100%;
+  max-height: 60dvh; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--surface); border-top: 3px solid var(--accent);
+  box-shadow: var(--raise);
+}
+.partida-mazo-lista button { border-bottom: 1px solid var(--border); }
+.partida-mazo-grupo {
+  display: flex; align-items: center; gap: 8px; margin: 0;
+  padding: 8px 16px 4px; background: var(--surface-2); color: var(--muted);
+  font-family: var(--label-font); font-size: 0.8rem; letter-spacing: 0.06em;
+  text-transform: var(--label-transform);
+}
+
+/* En un movil de pie la carta va a lo ancho y crece hacia abajo: se mira desde
+   arriba con scroll, no centrada. */
+@media (max-width: 640px) {
+  .partida-escena.vertical-movil { place-items: start stretch; }
+}
+/* Movil tumbado: la altura es lo que falta, asi que barra y mazo se aprietan. */
+@media (max-height: 500px) {
+  .partida-barra { padding-block: 4px; }
+  .partida-barra button, .partida-mazo button { padding-block: 6px; }
+  .partida-escena { padding: 6px; }
+}
+
 /* Una carta de habilidad abierta desde dentro de un dialogo: tiene que quedar
    por encima de el, no debajo. */
 .sobre-modal { position: relative; z-index: 50; }

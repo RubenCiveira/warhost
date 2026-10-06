@@ -42,6 +42,8 @@ import { catalogImageUrl, getBook, getBookByUid, groupImages, listBookImages, li
 import type { ArmyBook, ArmyUnit, CatalogImage, CatalogRule } from "../../api/catalog";
 import SpellCard from "@rubenciveira/opr-kit/react/SpellCard";
 import RuleCardModal from "../../components/RuleCardModal";
+import ModoPartida from "../../components/ModoPartida";
+import type { AbrirDesdeCarta } from "../../components/ModoPartida";
 import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 import { parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
 import RuleCard from "@rubenciveira/opr-kit/react/RuleCard";
@@ -56,6 +58,7 @@ import {
   tieneCaster,
 } from "@rubenciveira/opr-kit/core/faccion";
 import { agruparUnidades, emparejarHeroes } from "@rubenciveira/opr-kit/core/unidades";
+import type { FilaEjercito } from "@rubenciveira/opr-kit/core/unidades";
 import { listUnits as listCatalogUnits, listUpgradePackages } from "../../api/catalog";
 import { habilidadesInicialesQuest } from "@rubenciveira/opr-kit/core/questHero";
 import Tabs from "../../components/Tabs";
@@ -134,6 +137,7 @@ export default function ArmyEditor() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [imprimiendo, setImprimiendo] = useState<"libro" | "tarjetas" | null>(null);
   const [pdfMenuOpen, setPdfMenuOpen] = useState(false);
+  const [jugando, setJugando] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   /** Accion destructiva a la espera de confirmacion. */
   const [confirmando, setConfirmando] = useState<"descartar" | "borrar" | null>(null);
@@ -1105,7 +1109,99 @@ export default function ArmyEditor() {
     }
   }
 
+  /**
+   * La carta de una fila de la lista. En modo partida va sin acciones —ahi
+   * solo se consulta— y sus chips se abren en el centro, no en un modal.
+   */
+  function cartaDeFila(fila: FilaEjercito, abrir: AbrirDesdeCarta, conAcciones: boolean) {
+    const u = fila.principal;
+    const perfil = (v: ResolvedUnit) => ({
+      name: v.name,
+      size: v.size,
+      quality: v.quality,
+      defense: v.defense,
+      cost: v.cost,
+      maxWounds: v.maxWounds,
+      rules: v.rules,
+      loadout: v.loadout,
+      strength: v.strength,
+      dexterity: v.dexterity,
+      willpower: v.willpower,
+      power: v.power,
+      level: v.level,
+      experience: v.experience,
+      gold: v.gold,
+    });
+    // "Clase · tipo de unidad" para el subtitulo de la ficha: solo
+    // en quest, donde el nombre de arriba es el propio del heroe.
+    const subtituloDe = (v: ResolvedUnit) =>
+      quest
+        ? [heroClasses.find((clase) => clase.$id === v.heroClassId)?.name, v.unitTypeName]
+            .filter(Boolean)
+            .join(" · ")
+        : undefined;
+    // Solo en el borrador: sobre el ejercito publicado la vista es
+    // de consulta y no ensena nada que se pueda tocar.
+    const acciones = (indice: number, nombre: string) =>
+      conAcciones && editable && librosConocidos.length > 0 && entradasGuardadas[indice] ? (
+        <>
+          <button type="button" onClick={() => setEditandoIndice(indice)}>
+            Configurar
+          </button>
+          <button
+            type="button"
+            className="danger"
+            disabled={busy}
+            onClick={() => void onRemoveUnit(indice, nombre)}
+          >
+            Quitar
+          </button>
+        </>
+      ) : null;
+    return (
+      <UnitCard
+        variant="ejercito"
+        quest={quest}
+        formato={quest ? "personaje" : "tarot"}
+        subtitulo={subtituloDe(u)}
+        upgrades={u.upgrades ?? []}
+        glosario={glosario}
+        onHabilidad={abrir.onHabilidad}
+        avatarUrl={avatarDe(u)}
+        unit={perfil(u)}
+        questClassSkills={habilidadesParaHeroe(u.heroClassId, u.level)}
+        onQuestClassSkill={abrir.onQuestClassSkill}
+        combinada={u.combined}
+        notas={u.notes}
+        adjunta={
+          fila.adjunta
+            ? { ...perfil(fila.adjunta), combinada: fila.adjunta.combined, upgrades: fila.adjunta.upgrades ?? [] }
+            : undefined
+        }
+        accion={acciones(fila.indice, u.name)}
+        accionAdjunta={
+          fila.indiceAdjunta !== undefined && fila.adjunta
+            ? acciones(fila.indiceAdjunta, fila.adjunta.name)
+            : null
+        }
+      />
+    );
+  }
+
   if (loading) return <Spinner />;
+
+  if (jugando) {
+    return (
+      <ModoPartida
+        nombre={form.name}
+        secciones={agruparUnidades(filasEjercito)}
+        quest={quest}
+        glosario={glosario}
+        cartaDe={(fila, abrir) => cartaDeFila(fila, abrir, false)}
+        onSalir={() => setJugando(false)}
+      />
+    );
+  }
 
   if (imprimiendo) {
     return (
@@ -1212,6 +1308,11 @@ export default function ArmyEditor() {
           {!army ? (
             <button type="button" onClick={() => setImportOpen(true)}>
               Importar desde Army Forge
+            </button>
+          ) : null}
+          {army && units.length > 0 ? (
+            <button type="button" onClick={() => setJugando(true)}>
+              Activar modo partida
             </button>
           ) : null}
           {army ? (
@@ -1496,82 +1597,11 @@ export default function ArmyEditor() {
                 <span className="army-divider-label">{seccion.etiqueta}</span>
                 <span className="army-divider-count">{seccion.unidades.length}</span>
               </div>
-              {seccion.unidades.map((fila) => {
-                const u = fila.principal;
-                const perfil = (v: (typeof fila)["principal"]) => ({
-                  name: v.name,
-                  size: v.size,
-                  quality: v.quality,
-                  defense: v.defense,
-                  cost: v.cost,
-                  maxWounds: v.maxWounds,
-                  rules: v.rules,
-                  loadout: v.loadout,
-                  strength: v.strength,
-                  dexterity: v.dexterity,
-                  willpower: v.willpower,
-                  power: v.power,
-                  level: v.level,
-                  experience: v.experience,
-                  gold: v.gold,
-                });
-                // "Clase · tipo de unidad" para el subtitulo de la ficha: solo
-                // en quest, donde el nombre de arriba es el propio del heroe.
-                const subtituloDe = (v: (typeof fila)["principal"]) =>
-                  quest
-                    ? [heroClasses.find((clase) => clase.$id === v.heroClassId)?.name, v.unitTypeName]
-                        .filter(Boolean)
-                        .join(" · ")
-                    : undefined;
-                // Solo en el borrador: sobre el ejercito publicado la vista es
-                // de consulta y no ensena nada que se pueda tocar.
-                const acciones = (indice: number, nombre: string) =>
-                  editable && librosConocidos.length > 0 && entradasGuardadas[indice] ? (
-                    <>
-                      <button type="button" onClick={() => setEditandoIndice(indice)}>
-                        Configurar
-                      </button>
-                      <button
-                        type="button"
-                        className="danger"
-                        disabled={busy}
-                        onClick={() => void onRemoveUnit(indice, nombre)}
-                      >
-                        Quitar
-                      </button>
-                    </>
-                  ) : null;
-                return (
-                  <div key={fila.key} className="army-slide">
-                    <UnitCard
-                      variant="ejercito"
-                      quest={quest}
-                      formato={quest ? "personaje" : "tarot"}
-                      subtitulo={subtituloDe(u)}
-                      upgrades={u.upgrades ?? []}
-                      glosario={glosario}
-                      onHabilidad={setHabilidad}
-                      avatarUrl={avatarDe(u)}
-                      unit={perfil(u)}
-                      questClassSkills={habilidadesParaHeroe(u.heroClassId, u.level)}
-                      onQuestClassSkill={setHabilidadClase}
-                      combinada={u.combined}
-                      notas={u.notes}
-                      adjunta={
-                        fila.adjunta
-                          ? { ...perfil(fila.adjunta), combinada: fila.adjunta.combined, upgrades: fila.adjunta.upgrades ?? [] }
-                          : undefined
-                      }
-                      accion={acciones(fila.indice, u.name)}
-                      accionAdjunta={
-                        fila.indiceAdjunta !== undefined && fila.adjunta
-                          ? acciones(fila.indiceAdjunta, fila.adjunta.name)
-                          : null
-                      }
-                    />
-                  </div>
-                );
-              })}
+              {seccion.unidades.map((fila) => (
+                <div key={fila.key} className="army-slide">
+                  {cartaDeFila(fila, { onHabilidad: setHabilidad, onQuestClassSkill: setHabilidadClase }, true)}
+                </div>
+              ))}
             </Fragment>
           ))}
         </div>
