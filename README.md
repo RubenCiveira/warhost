@@ -93,7 +93,22 @@ CSS se importa en `src/main.tsx` antes que `styles.css`, y las variables
 principio de `styles.css`. Las imagenes no las busca el modulo: las resuelve
 quien pinta la vista (`avatarDe`, `miniaturaDe`, `coverUrl`).
 
-## Acceso
+## Sin cobertura
+
+Es una PWA instalable: el service worker (`vite-plugin-pwa`, en
+`vite.config.ts`) precachea la app y guarda las imagenes de Appwrite y las
+fuentes ya vistas, asi que abre sin red.
+
+`src/lib/cobertura.ts` decide si hay cobertura: sin red, con red 2G (donde el
+navegador lo dice), o cuando una lectura a Appwrite tarda mas de 10 s o falla
+por la red. Mientras no la haya, el cliente de `src/lib/appwrite.ts` no llama:
+lanza `SinCoberturaError`, y cada 30 s se sondea el servidor para volver.
+
+- **Ejercitos**: se consultan desde una copia en IndexedDB de las versiones
+  activas del jugador, que se refresca al arrancar y al listarlos. No se editan.
+- **Facciones** (y crear o construir ejercitos): "No disponible sin cobertura".
+- **Sesion**: se da por buena la ultima conocida. Salir borra la copia local.
+
 
 `RequireAccess` es la unica puerta de la app:
 

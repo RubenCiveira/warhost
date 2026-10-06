@@ -9,10 +9,12 @@ import type { Army } from "../../lib/types";
 import { errorMessage, formatDate } from "../../lib/format";
 import { EmptyState, ErrorBanner, PageHead, Spinner } from "../../components/ui";
 import AvisoComposicion from "../../components/AvisoComposicion";
+import { useCobertura } from "../../lib/cobertura";
 
 export default function ArmyList() {
   const { user } = useAuth();
   const { system } = useGameSystem();
+  const cobertura = useCobertura();
   const [armies, setArmies] = useState<Army[]>([]);
   const [allSystems, setAllSystems] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ export default function ArmyList() {
     return () => {
       cancelled = true;
     };
-  }, [user, system, allSystems]);
+  }, [user, system, allSystems, cobertura]);
 
   const noun = allSystems ? armyNounFor(null) : armyNounFor(system);
 
@@ -43,14 +45,18 @@ export default function ArmyList() {
             <button type="button" className="ghost" onClick={() => setAllSystems((value) => !value)}>
               {allSystems ? "Solo este modo" : "Ver todos"}
             </button>
-            <Link to="/facciones">
-              <button type="button">Construir desde faccion</button>
-            </Link>
-            <Link to="/ejercitos/nuevo">
-              <button type="button" className="primary">
-                Importar o crear
-              </button>
-            </Link>
+            {cobertura ? (
+              <>
+                <Link to="/facciones">
+                  <button type="button">Construir desde faccion</button>
+                </Link>
+                <Link to="/ejercitos/nuevo">
+                  <button type="button" className="primary">
+                    Importar o crear
+                  </button>
+                </Link>
+              </>
+            ) : null}
           </>
         }
       />

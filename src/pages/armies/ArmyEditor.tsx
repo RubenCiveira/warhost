@@ -61,6 +61,7 @@ import { habilidadesInicialesQuest } from "@rubenciveira/opr-kit/core/questHero"
 import Tabs from "../../components/Tabs";
 import { parseSpells, reglasMencionadasEnHechizos } from "@rubenciveira/opr-kit/core/spells";
 import { composeArmyPayload, sourceBooks } from "../../lib/armyPayload";
+import { useCobertura } from "../../lib/cobertura";
 import { listHeroClasses, listQuestShopPackages } from "../../api/content";
 import { questShopSectionsForEntry } from "@rubenciveira/opr-kit/core/questShop";
 
@@ -105,6 +106,7 @@ export default function ArmyEditor() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { system } = useGameSystem();
+  const cobertura = useCobertura();
 
   const [army, setArmy] = useState<Army | null>(null);
   const [form, setForm] = useState<FormState>({
@@ -369,8 +371,10 @@ export default function ArmyEditor() {
    * Un ejercito que todavia no existe no tiene nada que consultar: se edita
    * desde el primer momento, sin borrador de por medio, porque `onSubmit` lo
    * crea directamente cuando `army` sigue siendo nulo.
+   *
+   * Sin cobertura no se edita nada: solo se consulta la copia local.
    */
-  const editable = !army || (Boolean(draft) && viendoBorrador);
+  const editable = cobertura && (!army || (Boolean(draft) && viendoBorrador));
 
   /**
    * El nombre se edita en la barra y se guarda solo, con un respiro para no
@@ -1252,12 +1256,12 @@ export default function ArmyEditor() {
               ) : null}
             </div>
           ) : null}
-          {draft && !viendoBorrador ? (
+          {cobertura && draft && !viendoBorrador ? (
             <button type="button" className="primary" onClick={() => setDecidirBorrador("peticion")}>
               Borrador
             </button>
           ) : null}
-          {army && !draft ? (
+          {cobertura && army && !draft ? (
             <button type="button" className="primary" disabled={busy} onClick={() => void onEditar()}>
               {busy ? "Abriendo…" : "Editar"}
             </button>
@@ -1330,7 +1334,7 @@ export default function ArmyEditor() {
 
       <ErrorBanner error={error} />
       {notice ? <div className="banner ok">{notice}</div> : null}
-      {armyId && librosConocidos.length === 0 ? (
+      {cobertura && armyId && librosConocidos.length === 0 ? (
         <p className="small muted">
           No se ha podido identificar de que faccion del catalogo viene {noun.demonstrative} {noun.singular}. Usa el
           buscador de faccion junto al boton de anadir para elegir una y empezar a anadir unidades.

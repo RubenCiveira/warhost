@@ -1,5 +1,6 @@
 import { ID, Permission, Query, Role, storage, tables } from "../lib/appwrite";
 import { TABLES, env } from "../lib/env";
+import { SinCoberturaError } from "../lib/cobertura";
 import type { GameSystemId, Setting } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { Army } from "../lib/types";
 
@@ -33,12 +34,34 @@ export async function listArmies(userId: string, gameSystem?: GameSystemId): Pro
   ];
   if (gameSystem) queries.push(Query.equal("gameSystem", gameSystem));
 
-  const result = await tables.listRows<Army>({
-    databaseId: env.databaseId,
-    tableId: TABLES.armies,
-    queries,
-  });
-  return result.rows;
+  try {
+    const result = await tables.listRows<Army>({
+      databaseId: env.databaseId,
+      tableId: TABLES.armies,
+      queries,
+    });
+    // Lo listado sustituye a lo que habia de ese usuario y, si se filtro, de ese modo.
+    escribirCopia((almacen) => {
+      const cursor = almacen.openCursor();
+      cursor.onsuccess = () => {
+        const actual = cursor.result;
+        if (actual) {
+          const army = actual.value as Army;
+          if (army.userId === userId && (!gameSystem || army.gameSystem === gameSystem)) actual.delete();
+          actual.continue();
+          return;
+        }
+        // Despues de recorrer, o el cursor pasaria por las recien guardadas y las borraria.
+        for (const army of result.rows) almacen.put(army, claveDe(army));
+      };
+    });
+    return result.rows;
+  } catch (err) {
+    if (!(err instanceof SinCoberturaError)) throw err;
+    return (await leerCopia())
+      .filter((army) => army.userId === userId && (!gameSystem || army.gameSystem === gameSystem))
+      .sort((a, b) => b.$updatedAt.localeCompare(a.$updatedAt));
+  }
 }
 
 export async function getArmy(armyId: string): Promise<Army> {
@@ -49,7 +72,7 @@ export async function createArmy(userId: string, draft: ArmyDraft): Promise<Army
   // El id de la fila estrena la linea de versiones: el primer activo es su
   // propio origen.
   const rowId = ID.unique();
-  return tables.createRow<Army>({
+  const created = await tables.createRow<Army>({
     databaseId: env.databaseId,
     tableId: TABLES.armies,
     rowId,
@@ -83,6 +106,8 @@ export async function createArmy(userId: string, draft: ArmyDraft): Promise<Army
     },
     permissions: ownerPermissions(userId, draft.shared ?? false),
   });
+  escribirCopia((almacen) => almacen.put(created, claveDe(created)));
+  return created;
 }
 
 /** El dueno manda. Si el ejercito es publico, cualquier aceptado puede leerlo. */
@@ -123,6 +148,7 @@ export async function deleteArmy(army: Army): Promise<void> {
       tables.deleteRow({ databaseId: env.databaseId, tableId: TABLES.armies, rowId: fila.$id }),
     ),
   );
+  escribirCopia((almacen) => almacen.delete(lineageId));
 }
 
 /** Todas las versiones de un ejercito: activa, borrador y archivadas. */
@@ -261,7 +287,9 @@ export async function publishDraft(draft: Army): Promise<Army> {
   }
 
   await prunerHistorial(lineageId);
-  return getArmy(draft.$id);
+  const published = await getArmy(draft.$id);
+  sustituirEnCopia(published);
+  return published;
 }
 
 export async function discardDraft(draft: Army): Promise<void> {
@@ -308,6 +336,20 @@ async function prunerHistorial(lineageId: string): Promise<void> {
  * se devuelve la version activa con su borrador si lo hay.
  */
 export async function resolveArmy(idOrLineage: string): Promise<{ active: Army; draft: Army | null }> {
+  try {
+    const resolved = await resolveArmyOnline(idOrLineage);
+    sustituirEnCopia(resolved.active);
+    return resolved;
+  } catch (err) {
+    if (!(err instanceof SinCoberturaError)) throw err;
+    // Sin cobertura solo se consulta: la copia guarda la version activa, sin borrador.
+    const active = (await leerCopia()).find((army) => army.$id === idOrLineage || army.lineageId === idOrLineage);
+    if (!active) throw err;
+    return { active, draft: null };
+  }
+}
+
+async function resolveArmyOnline(idOrLineage: string): Promise<{ active: Army; draft: Army | null }> {
   let row: Army | null = null;
   try {
     row = await getArmy(idOrLineage);
@@ -320,4 +362,69 @@ export async function resolveArmy(idOrLineage: string): Promise<{ active: Army; 
   if (!active) throw new Error("Este ejercito ya no existe.");
 
   return { active, draft: await getDraftFor(active.lineageId ?? active.$id) };
+}
+
+/* Copia local -----------------------------------------------------------------
+ *
+ * Las versiones activas de los ejercitos del jugador, para consultarlos sin
+ * cobertura. Se rellena al listarlos y se mantiene al crear, publicar y borrar;
+ * sin cobertura no se edita, asi que nunca hay nada que subir de vuelta.
+ *
+ * Va en IndexedDB y no en localStorage porque el JSON original de Army Forge
+ * no cabe en sus 5 MB. Cada ejercito es un registro con su `lineageId` de
+ * clave, y cada cambio es una transaccion: dos escrituras a la vez no se pisan.
+ * Ningun fallo de la copia llega al que llama: solo hace falta sin cobertura.
+ */
+
+const ALMACEN = "ejercitos";
+let baseDeDatos: Promise<IDBDatabase> | null = null;
+
+function abrirCopia(): Promise<IDBDatabase> {
+  baseDeDatos ??= new Promise((resolve, reject) => {
+    // Pide que el navegador no la borre por falta de espacio; instalada como
+    // PWA se suele conceder sin preguntar.
+    void navigator.storage?.persist?.().catch(() => undefined);
+    const peticion = indexedDB.open("warhost", 1);
+    peticion.onupgradeneeded = () => peticion.result.createObjectStore(ALMACEN);
+    peticion.onsuccess = () => resolve(peticion.result);
+    peticion.onerror = () => reject(peticion.error);
+  });
+  return baseDeDatos;
+}
+
+function claveDe(army: Army): string {
+  return army.lineageId ?? army.$id;
+}
+
+/** Hace los cambios de `uso` en una sola transaccion, sin esperarla. */
+function escribirCopia(uso: (almacen: IDBObjectStore) => unknown) {
+  void abrirCopia()
+    .then((bd) => uso(bd.transaction(ALMACEN, "readwrite").objectStore(ALMACEN)))
+    .catch(() => undefined);
+}
+
+async function leerCopia(): Promise<Army[]> {
+  try {
+    const bd = await abrirCopia();
+    return await new Promise((resolve, reject) => {
+      const peticion = bd.transaction(ALMACEN).objectStore(ALMACEN).getAll();
+      peticion.onsuccess = () => resolve(peticion.result as Army[]);
+      peticion.onerror = () => reject(peticion.error);
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** Solo refresca los que ya estaban: abrir el ejercito publico de otro no lo copia. */
+function sustituirEnCopia(active: Army) {
+  escribirCopia((almacen) => {
+    const previa = almacen.getKey(claveDe(active));
+    previa.onsuccess = () => previa.result !== undefined && almacen.put(active, claveDe(active));
+  });
+}
+
+/** Al salir: los ejercitos de este jugador no deben quedarse en el dispositivo. */
+export function olvidarCopiaLocal() {
+  escribirCopia((almacen) => almacen.clear());
 }

@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { useGameSystem } from "../context/GameSystemContext";
 import { SETTINGS, armyNounFor, isQuestSystem, systemsFor } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { GameSystem, GameSystemId } from "@rubenciveira/opr-kit/core/gameSystems";
+import { listArmies } from "../api/armies";
+import { reintentar, useCobertura } from "../lib/cobertura";
 
 // Al inicio se vuelve con el logo. Partidas, asociaciones y reglas estan
 // ocultas por ahora: sus rutas siguen en App.tsx, pero no se enlazan.
@@ -181,6 +183,14 @@ function MobileNav() {
 
 export default function Layout() {
   const { system } = useGameSystem();
+  const { user } = useAuth();
+  const cobertura = useCobertura();
+
+  // Al arrancar y al recuperar la cobertura se refresca la copia local de los
+  // ejercitos, para tenerla al dia cuando se pierda.
+  useEffect(() => {
+    if (user && cobertura) void listArmies(user.$id).catch(() => undefined);
+  }, [user, cobertura]);
 
   // La ambientacion elegida tine toda la interfaz.
   useEffect(() => {
@@ -207,6 +217,14 @@ export default function Layout() {
         </div>
       </header>
       <main className="content">
+        {cobertura ? null : (
+          <div className="banner spread">
+            <span>Sin cobertura: consultas la copia guardada en este dispositivo y no se puede editar.</span>
+            <button type="button" className="ghost tiny" onClick={() => void reintentar()}>
+              Reintentar
+            </button>
+          </div>
+        )}
         <Outlet />
       </main>
     </div>

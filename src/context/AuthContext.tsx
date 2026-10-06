@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 import { ID, OAuthProvider, account } from "../lib/appwrite";
 import type { Models } from "../lib/appwrite";
+import { SinCoberturaError } from "../lib/cobertura";
+import { olvidarCopiaLocal } from "../api/armies";
 import { accessStateFor, isAdmin, isEditor } from "../api/access";
 import type { AccessState } from "../api/access";
 
@@ -23,15 +25,39 @@ interface AuthValue {
 
 const AuthContext = createContext<AuthValue | null>(null);
 
+const USUARIO_KEY = "warhost:usuario";
+
+function leerUsuario(): User | null {
+  try {
+    return JSON.parse(window.localStorage.getItem(USUARIO_KEY) ?? "null") as User | null;
+  } catch {
+    return null;
+  }
+}
+
+function guardarUsuario(user: User | null) {
+  try {
+    if (user) window.localStorage.setItem(USUARIO_KEY, JSON.stringify(user));
+    else window.localStorage.removeItem(USUARIO_KEY);
+  } catch {
+    // Almacenamiento bloqueado: sin cobertura habra que volver a entrar.
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     try {
-      setUser(await account.get());
-    } catch {
-      setUser(null);
+      const actual = await account.get();
+      setUser(actual);
+      guardarUsuario(actual);
+    } catch (err) {
+      // Sin cobertura no se sabe si la sesion sigue viva: se da por buena la
+      // ultima conocida para poder consultar la copia local.
+      setUser(err instanceof SinCoberturaError ? leerUsuario() : null);
+      if (!(err instanceof SinCoberturaError)) guardarUsuario(null);
     } finally {
       setLoading(false);
     }
@@ -73,6 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await account.deleteSession({ sessionId: "current" });
     } finally {
       setUser(null);
+      guardarUsuario(null);
+      olvidarCopiaLocal();
     }
   }, []);
 

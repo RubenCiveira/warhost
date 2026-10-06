@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import RequireAccess from "./components/RequireAccess";
+import RequiereCobertura from "./components/RequiereCobertura";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Verify from "./pages/Verify";
@@ -36,17 +37,17 @@ export default function App() {
       >
         <Route path="/" element={<Home />} />
         <Route path="/ejercitos" element={<ArmyList />} />
-        <Route path="/ejercitos/nuevo" element={<ArmyEditor />} />
+        <Route path="/ejercitos/nuevo" element={<RequiereCobertura><ArmyEditor /></RequiereCobertura>} />
         <Route path="/ejercitos/:armyId" element={<ArmyEditor />} />
-        <Route path="/ejercitos/:armyId/unidades" element={<ArmyBuilder />} />
+        <Route path="/ejercitos/:armyId/unidades" element={<RequiereCobertura><ArmyBuilder /></RequiereCobertura>} />
         <Route path="/partidas" element={<GameList />} />
         <Route path="/partidas/nueva" element={<GameNew />} />
         <Route path="/partidas/:gameId" element={<GameLive />} />
         <Route path="/asociaciones" element={<AssociationList />} />
         <Route path="/asociaciones/:associationId" element={<AssociationDetail />} />
-        <Route path="/facciones" element={<CatalogBooks />} />
-        <Route path="/facciones/:bookKey" element={<CatalogBook />} />
-        <Route path="/facciones/:bookKey/crear" element={<ArmyBuilder />} />
+        <Route path="/facciones" element={<RequiereCobertura><CatalogBooks /></RequiereCobertura>} />
+        <Route path="/facciones/:bookKey" element={<RequiereCobertura><CatalogBook /></RequiereCobertura>} />
+        <Route path="/facciones/:bookKey/crear" element={<RequiereCobertura><ArmyBuilder /></RequiereCobertura>} />
         <Route path="/reglas" element={<RulesIndex />} />
         <Route path="/misiones" element={<MissionCards />} />
         <Route path="/clases" element={<HeroClasses />} />
