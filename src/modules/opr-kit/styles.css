@@ -867,6 +867,14 @@
 .pdf-a-escala :is(.ucard, .scard) { box-shadow: none; }
 .pdf-a-escala :is(.ucard-accion, .ucard-foot) { display: none; }
 .pdf-a-escala .print-dorso { border-color: #000; }
+/* La captura vuelve a medir el texto dentro de una copia en SVG, y puede
+   salirle una fraccion de pixel mas ancho que en pantalla: un chip, que mide
+   justo lo que su texto, partia entonces sus palabras en dos renglones. Lo
+   que en la carta es de un solo renglon no se parte; como mucho, desborda
+   esa fraccion, que no se ve. */
+.pdf-a-escala :is(.ucard-chip, .ucard-table th, .ucard-table .num, .ucard-stat, .ucard-bloque-title, .ucard-label, .ucard-combinada, .scard-valor) {
+  white-space: nowrap;
+}
 .pdf-a-escala .print-libro { display: block; width: 210mm; max-width: none; border: 0; box-shadow: none; }
 .pdf-a-escala .print-faccion-titulo { width: 190mm; border-color: #000; color: #000; }
 .pdf-a-escala .libro-ficha { width: 190mm; margin: 0 0 2mm; }
