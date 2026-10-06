@@ -6,6 +6,7 @@
  *   pnpm preview:hoja [bookKey]
  */
 import { build } from "esbuild";
+import { REACT_UNICO } from "./react-unico.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
@@ -27,6 +28,7 @@ const paquetes = filas("army_upgrade_packages", [{ method: "equal", attribute: "
 const dir = await mkdtemp(join(tmpdir(), "warhost-hoja-"));
 const salidaJs = join(dir, "hoja.cjs");
 await build({
+  alias: REACT_UNICO,
   stdin: {
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
@@ -59,7 +61,7 @@ createRequire(import.meta.url)(salidaJs);
 
 const html = join(dir, "hoja.html");
 await writeFile(html, `<!doctype html><html lang="es" data-setting="grimdark"><head><meta charset="utf-8">
-  <style>${readFileSync("src/styles.css", "utf8")}</style>
+  <style>${readFileSync("node_modules/@rubenciveira/opr-kit/dist/styles.css", "utf8")}</style><style>${readFileSync("src/styles.css", "utf8")}</style>
   <style>body{padding:20px;display:flex;flex-direction:column;gap:16px;align-items:flex-start}</style>
   </head><body>${globalThis.__HTML__}</body></html>`);
 

@@ -6,6 +6,7 @@
  *   pnpm preview:spells [bookKey] [grimdark|fantasy]
  */
 import { build } from "esbuild";
+import { REACT_UNICO } from "./react-unico.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
@@ -25,6 +26,7 @@ const libro = JSON.parse(
 const dir = await mkdtemp(join(tmpdir(), "warhost-spells-"));
 const salidaJs = join(dir, "cartas.cjs");
 await build({
+  alias: REACT_UNICO,
   stdin: {
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
@@ -47,7 +49,7 @@ createRequire(import.meta.url)(salidaJs);
 
 const html = join(dir, "preview.html");
 await writeFile(html, `<!doctype html><html lang="es" data-setting="${TEMA}"><head><meta charset="utf-8">
-  <style>${readFileSync("src/styles.css", "utf8")}</style>
+  <style>${readFileSync("node_modules/@rubenciveira/opr-kit/dist/styles.css", "utf8")}</style><style>${readFileSync("src/styles.css", "utf8")}</style>
   <style>body{padding:24px;display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}</style>
   </head><body>${globalThis.__HTML__}</body></html>`);
 

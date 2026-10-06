@@ -6,6 +6,7 @@
  *   pnpm test:aviso
  */
 import { build } from "esbuild";
+import { REACT_UNICO } from "./react-unico.mjs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -15,6 +16,7 @@ const dir = await mkdtemp(join(tmpdir(), "warhost-aviso-"));
 const bundle = join(dir, "app.js");
 
 await build({
+  alias: REACT_UNICO,
   stdin: {
     contents: `
       import { useState } from "react";
@@ -54,7 +56,7 @@ await build({
 
 const html = join(dir, "app.html");
 await writeFile(html, `<!doctype html><html lang="es" data-setting="grimdark"><head><meta charset="utf-8">
-  <style>${readFileSync("src/styles.css", "utf8")}</style></head>
+  <style>${readFileSync("node_modules/@rubenciveira/opr-kit/dist/styles.css", "utf8")}</style><style>${readFileSync("src/styles.css", "utf8")}</style></head>
   <body><div id="root"></div><script>${readFileSync(bundle, "utf8")}</script></body></html>`);
 
 const { chromium } = await import("playwright");

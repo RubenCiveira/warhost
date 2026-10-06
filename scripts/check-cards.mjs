@@ -6,6 +6,7 @@
  *   pnpm check:cards [nLibros]
  */
 import { build } from "esbuild";
+import { REACT_UNICO } from "./react-unico.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
@@ -64,6 +65,7 @@ const paquetes = libros.flatMap((libro) =>
 const dir = await mkdtemp(join(tmpdir(), "warhost-check-"));
 const bundle = join(dir, "cartas.cjs");
 await build({
+  alias: REACT_UNICO,
   stdin: {
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
@@ -123,7 +125,7 @@ const pagina = join(dir, "check.html");
 await writeFile(
   pagina,
   `<!doctype html><html lang="es" data-setting="grimdark"><head><meta charset="utf-8">
-   <style>${readFileSync("src/styles.css", "utf8")}</style></head><body>${globalThis.__HTML__}</body></html>`,
+   <style>${readFileSync("node_modules/@rubenciveira/opr-kit/dist/styles.css", "utf8")}</style><style>${readFileSync("src/styles.css", "utf8")}</style></head><body>${globalThis.__HTML__}</body></html>`,
 );
 
 const { chromium } = await import("playwright");

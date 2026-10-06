@@ -7,6 +7,7 @@
  *   pnpm test:impresion [bookKey]
  */
 import { build } from "esbuild";
+import { REACT_UNICO } from "./react-unico.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, writeFile, readFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
@@ -26,6 +27,7 @@ const paquetes = filas("army_upgrade_packages", [{ method: "equal", attribute: "
 const dir = await mkdtemp(join(tmpdir(), "warhost-print-"));
 const salidaJs = join(dir, "hoja.cjs");
 await build({
+  alias: REACT_UNICO,
   stdin: {
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
@@ -50,7 +52,7 @@ createRequire(import.meta.url)(salidaJs);
 
 const html = join(dir, "print.html");
 await writeFile(html, `<!doctype html><html lang="es" data-setting="grimdark"><head><meta charset="utf-8">
-  <style>${readFileSync("src/styles.css", "utf8")}</style></head>
+  <style>${readFileSync("node_modules/@rubenciveira/opr-kit/dist/styles.css", "utf8")}</style><style>${readFileSync("src/styles.css", "utf8")}</style></head>
   <body><div class="content"><div class="army-strip">${globalThis.__HTML__}</div></div></body></html>`);
 
 const { chromium } = await import("playwright");

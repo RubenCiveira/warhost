@@ -74,11 +74,18 @@ src/
 Las vistas nunca hablan con el SDK directamente: todo pasa por `src/api`, que es
 donde viven los ids de tabla, las consultas y los permisos de fila.
 
-La logica de ejercitos (constructor, reglas, importacion de Army Forge) vive
-aparte, en [`@rubenciveira/opr-kit`](https://github.com/RubenCiveira/opr-kit), para
-poder reutilizarla en otras aplicaciones. Sus tipos (`core/model`) solo declaran
-los campos que la logica lee: las filas de Appwrite encajan tal cual, salvo
-`HeroClass`, cuyo `id` neutro rellena `src/api/content.ts` a partir del `$id`.
+La logica de ejercitos (constructor, reglas, importacion de Army Forge) y las
+cartas y vistas de impresion viven aparte, en
+[`@rubenciveira/opr-kit`](https://github.com/RubenCiveira/opr-kit), para poder
+reutilizarlas en otras aplicaciones. Sus tipos (`core/model`) solo declaran los
+campos que se leen: las filas de Appwrite encajan tal cual, salvo `ArmyBook` y
+`HeroClass`, cuyo `id` neutro rellenan `src/api/catalog.ts` y
+`src/api/content.ts` a partir del `$id`.
+
+Su CSS se importa en `src/main.tsx` antes que `styles.css`, y las variables
+`--opr-*` del tema de las cartas se enlazan con las de la ambientacion al
+principio de `styles.css`. Las imagenes no las busca el paquete: las resuelve
+quien pinta la vista (`avatarDe`, `miniaturaDe`, `coverUrl`).
 
 Para tocar el paquete y probarlo aqui sin publicarlo, clonalo al lado y
 enlazalo. `pnpm link` anade un `overrides` a `package.json` y al lockfile que no
@@ -89,6 +96,10 @@ git clone https://github.com/RubenCiveira/opr-kit ../opr-kit
 (cd ../opr-kit && pnpm install && pnpm build --watch) &
 pnpm link ../opr-kit
 ```
+
+Enlazado, el paquete veria su propia copia de React y dos copias rompen los
+hooks: por eso `vite.config.ts` tiene `resolve.dedupe` y los scripts que pintan
+componentes usan el alias de `scripts/react-unico.mjs`.
 
 ## Acceso
 
