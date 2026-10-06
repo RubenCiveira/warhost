@@ -39,9 +39,8 @@
     "test:misiones": "node scripts/test-misiones.mjs"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
     "appwrite": "^27.0.0",
-    "jspdf": "^4.2.1",
-    "modern-screenshot": "^4.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-easy-crop": "^6.2.3",

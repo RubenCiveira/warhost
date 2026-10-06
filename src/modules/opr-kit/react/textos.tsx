@@ -74,10 +74,8 @@ export interface Textos {
   loLlevan: (unidades: string[]) => string;
   tirada: (umbral: number) => string;
   // Impresion.
-  imprimir: string;
-  imprimirTitulo: (nombre: string) => string;
   crearPdf: string;
-  generandoPdf: (hecha: number, total: number) => string;
+  convertirPdf: string;
   preparandoPdf: string;
   pdfListo: string;
   abrirPdf: string;
@@ -86,19 +84,11 @@ export interface Textos {
   errorPdf: string;
   pdfTamanoReal: string;
   cancelar: string;
-  volverAElegir: string;
-  volver: string;
-  eligeModo: (noun: ArmyNoun) => string;
   modoLibro: string;
-  modoLibroAyuda: string;
   modoTarjetas: string;
-  modoTarjetasAyuda: string;
   sinUnidades: (noun: ArmyNoun) => string;
   sinFaccion: string;
   resumen: (puntos: number, unidades: number, miniaturas: number) => string;
-  fichaDividida: string;
-  mazoUnidades: string;
-  mazoCartas: string;
   portadaConImagen: string;
   incluirTrasfondo: string;
 }
@@ -163,10 +153,8 @@ export const es: Textos = {
   sinTexto: "No hay texto para esta regla, ni en los libros de faccion ni en el reglamento basico.",
   loLlevan: (unidades) => `Lo llevan ${unidades.slice(0, 3).join(", ")}${unidades.length > 3 ? ` y ${unidades.length - 3} mas` : ""}`,
   tirada: (umbral) => `Tira 1D6: iguala o supera ${umbral}`,
-  imprimir: "Imprimir",
-  imprimirTitulo: (nombre) => `Imprimir ${nombre}`,
   crearPdf: "Crear PDF",
-  generandoPdf: (hecha, total) => `Generando PDF… ${hecha}/${total}`,
+  convertirPdf: "Convertir a PDF",
   preparandoPdf: "Preparando el PDF…",
   pdfListo: "PDF listo",
   abrirPdf: "Abrir",
@@ -175,22 +163,12 @@ export const es: Textos = {
   errorPdf: "No se pudo generar el PDF. Vuelve a intentarlo; si sigue fallando, usa Imprimir del navegador.",
   pdfTamanoReal: "Imprime el PDF a tamaño real (100 %), sin «ajustar a la página»: así todo sale a su medida real.",
   cancelar: "Cancelar",
-  volverAElegir: "← Volver a elegir",
-  volver: "← Volver",
-  eligeModo: (noun) => `Elige como quieres imprimir las cartas de ${noun.demonstrative} ${noun.singular}.`,
   modoLibro: "Modo libro",
-  modoLibroAyuda:
-    "Tarjetas grandes de unidad con armas, equipo, hechizos y el texto de sus reglas especiales. La impresion llena cada pagina con las tarjetas que quepan y divide las unidades demasiado largas.",
   modoTarjetas: "Modo tarjetas con dorso",
-  modoTarjetasAyuda:
-    "Cada carta sale una sola vez, pensado para plastificar y recortar: hojas de anverso seguidas de su hoja de reverso. Imprime primero las hojas impares, voltea el papel por el borde largo y vuelve a imprimir las pares.",
   sinUnidades: (noun) => `${noun.demonstrativeCap} ${noun.singular} no tiene unidades que imprimir.`,
   sinFaccion: "Sin faccion",
   resumen: (puntos, unidades, miniaturas) =>
     [plural(puntos, "punto", "puntos"), plural(unidades, "unidad", "unidades"), plural(miniaturas, "miniatura", "miniaturas")].join(" · "),
-  fichaDividida: "Ficha dividida para no recortar esta unidad al imprimir.",
-  mazoUnidades: "Unidades",
-  mazoCartas: "Habilidades, equipo, hechizos y reglas generales",
   portadaConImagen: "Portada con nombre e imagen",
   incluirTrasfondo: "Incluir el trasfondo de la faccion",
 };
@@ -253,10 +231,8 @@ export const en: Textos = {
   sinTexto: "There is no text for this rule, neither in the army books nor in the core rulebook.",
   loLlevan: (unidades) => `Carried by ${unidades.slice(0, 3).join(", ")}${unidades.length > 3 ? ` and ${unidades.length - 3} more` : ""}`,
   tirada: (umbral) => `Roll 1D6: ${umbral}+`,
-  imprimir: "Print",
-  imprimirTitulo: (nombre) => `Print ${nombre}`,
   crearPdf: "Create PDF",
-  generandoPdf: (hecha, total) => `Generating PDF… ${hecha}/${total}`,
+  convertirPdf: "Convert to PDF",
   preparandoPdf: "Preparing the PDF…",
   pdfListo: "PDF ready",
   abrirPdf: "Open",
@@ -265,22 +241,12 @@ export const en: Textos = {
   errorPdf: "The PDF could not be generated. Try again; if it keeps failing, use the browser's Print.",
   pdfTamanoReal: "Print the PDF at actual size (100%), not \"fit to page\", so everything comes out at its real size.",
   cancelar: "Cancel",
-  volverAElegir: "← Back",
-  volver: "← Back",
-  eligeModo: (noun) => `Choose how to print the cards of this ${noun.singular}.`,
   modoLibro: "Book mode",
-  modoLibroAyuda:
-    "Large unit cards with weapons, gear, spells and the full text of their special rules. Each page is filled with as many cards as fit, and units that are too long are split.",
   modoTarjetas: "Cards with backs",
-  modoTarjetasAyuda:
-    "Every card is printed once, ready to laminate and cut: front sheets followed by their back sheet. Print the odd sheets first, flip the paper on the long edge and print the even ones.",
   sinUnidades: (noun) => `This ${noun.singular} has no units to print.`,
   sinFaccion: "No faction",
   resumen: (puntos, unidades, miniaturas) =>
     [plural(puntos, "point", "points"), plural(unidades, "unit", "units"), plural(miniaturas, "model", "models")].join(" · "),
-  fichaDividida: "Card split so this unit is not cut off when printed.",
-  mazoUnidades: "Units",
-  mazoCartas: "Abilities, gear, spells and core rules",
   portadaConImagen: "Cover with name and image",
   incluirTrasfondo: "Include the faction background",
 };

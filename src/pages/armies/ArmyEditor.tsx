@@ -1204,24 +1204,6 @@ export default function ArmyEditor() {
     );
   }
 
-  if (imprimiendo) {
-    return (
-      <ArmyPrintView
-        nombre={form.name}
-        noun={noun}
-        quest={quest}
-        units={units}
-        entradasAttachedTo={entradasGuardadas.map((entrada) => entrada.attachedTo)}
-        glosario={glosario}
-        librosConocidos={librosConocidos}
-        avatarDe={avatarDe}
-        puedeLanzarHechizos={puedeLanzarHechizos}
-        modoInicial={imprimiendo}
-        onCerrar={() => setImprimiendo(null)}
-      />
-    );
-  }
-
   return (
     <>
       <header className="army-bar">
@@ -1909,6 +1891,21 @@ export default function ArmyEditor() {
         </fieldset>
       </form>
       </details>
+      {imprimiendo ? (
+        <ArmyPrintView
+          nombre={form.name}
+          noun={noun}
+          quest={quest}
+          units={units}
+          entradasAttachedTo={entradasGuardadas.map((entrada) => entrada.attachedTo)}
+          glosario={glosario}
+          librosConocidos={librosConocidos}
+          avatarDe={avatarDe}
+          puedeLanzarHechizos={puedeLanzarHechizos}
+          modo={imprimiendo}
+          onCerrar={() => setImprimiendo(null)}
+        />
+      ) : null}
     </>
   );
 }

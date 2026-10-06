@@ -315,25 +315,9 @@ export default function CatalogBook() {
     );
   }
 
-  if (imprimir) {
-    const portada = pickCover(byTarget.get(targetKeyFor(book.$id))?.filter((image) => (image.imageType ?? "gallery") === "gallery"));
-    return (
-      <FactionPrintView
-        book={book}
-        units={units}
-        coverUrl={portada ? catalogImageUrl(portada.fileId) : book.coverImagePath}
-        miniaturaDe={(unit) => {
-          const miniatura = pickImageByType(byTarget.get(targetKeyFor(book.$id, unit.unitId)), "miniature");
-          return miniatura ? catalogImageUrl(miniatura.fileId) : null;
-        }}
-        packages={packages}
-        glosario={glosario}
-        onCerrar={() => setImprimir(false)}
-      />
-    );
-  }
-
   const factionGallery = gallery(targetKeyFor(book.$id), book.coverImagePath);
+  const portada = pickCover(byTarget.get(targetKeyFor(book.$id))?.filter((image) => (image.imageType ?? "gallery") === "gallery"));
+  const portadaUrl = portada ? catalogImageUrl(portada.fileId) : book.coverImagePath;
 
   return (
     <>
@@ -346,7 +330,7 @@ export default function CatalogBook() {
         actions={
           <>
             <button type="button" onClick={() => setImprimir(true)}>
-              Imprimir faccion
+              Convertir a PDF
             </button>
             <Link to={`/facciones/${book.$id}/crear`} className="button-link">
               Crear {armyNounFor(bookSystem).singular}
@@ -581,6 +565,20 @@ export default function CatalogBook() {
           ))}
         </div>
       )}
+      {imprimir ? (
+        <FactionPrintView
+          book={book}
+          units={units}
+          coverUrl={portadaUrl}
+          miniaturaDe={(unit) => {
+            const miniatura = pickImageByType(byTarget.get(targetKeyFor(book.$id, unit.unitId)), "miniature");
+            return miniatura ? catalogImageUrl(miniatura.fileId) : null;
+          }}
+          packages={packages}
+          glosario={glosario}
+          onCerrar={() => setImprimir(false)}
+        />
+      ) : null}
     </>
   );
 }

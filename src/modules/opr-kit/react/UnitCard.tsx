@@ -47,14 +47,14 @@ export interface QuestHeroSkillSummary extends HeroSkillCardData {
  * `densidad`, no el recorte. El tope se queda como red por si un ejercito
  * importado trae una unidad con mas de las que existen en los libros.
  */
-const ARMAS_VISIBLES = 6;
+export const ARMAS_VISIBLES = 6;
 
 /**
  * En la carta emparejada cada columna va a media anchura y la carta mide lo
  * mismo que cualquier otra tarot: el tope baja para que quepa, y lo que sobra
  * se resume en la misma linea de "y N armas mas" que ya usaba la carta entera.
  */
-const ARMAS_VISIBLES_COLUMNA = 4;
+export const ARMAS_VISIBLES_COLUMNA = 4;
 
 /*
  * Las reglas y el equipo van en lista, una por linea, y no en etiquetas: es la
@@ -68,7 +68,7 @@ const ARMAS_VISIBLES_COLUMNA = 4;
  * el numero de armas sino los renglones que ocupan: un arma con cuatro reglas
  * envuelve y cuenta por dos.
  */
-function densidad(
+export function densidad(
   weapons: LoadoutEntry[],
   rules: string[],
   gear: LoadoutEntry[],
@@ -744,6 +744,36 @@ function ColumnaPerfil({
   );
 }
 
+/**
+ * Lo que el heroe le presta a la unidad entera: cualquier regla cuya
+ * descripcion lo diga de forma expresa —"This model and its unit get X"—, la
+ * lleve el mismo escrita o se la de un objeto de su equipo. "Preacher" es
+ * justo eso: un objeto que concede "Bane in Melee Aura", y esa regla vive en
+ * `rules` del objeto, no en las del heroe — mirar solo `unit.rules` se lo
+ * dejaria fuera. Sin glosario no hay forma de saber que concede cada una, asi
+ * que se deja la lista vacia antes que adivinar.
+ */
+export function aportesDelHeroe(
+  heroe: UnitCardData,
+  loadout: LoadoutEntry[],
+  adjunta: UnitCardData,
+  glosario?: GlosarioCarta,
+): Array<{ nombre: string; concede: Habilidad; alcance: string | null }> {
+  if (!glosario) return [];
+  return [...new Set([...heroe.rules, ...loadout.flatMap((entrada) => entrada.rules)])]
+    .map((etiqueta) => {
+      const nombre = parseHabilidad(etiqueta, "regla").nombre;
+      const aporte = reglaParaLaUnidad(glosario.get(nombre.toLowerCase())?.description, (n) => glosario.has(n.toLowerCase()));
+      return aporte ? { nombre, concede: aporte.concede, alcance: aporte.alcance } : null;
+    })
+    .filter((aporte): aporte is { nombre: string; concede: Habilidad; alcance: string | null } => aporte !== null)
+    // Si la unidad ya lo lleva de por si, no hace falta repetirlo.
+    .filter(
+      (aporte) =>
+        !adjunta.rules.some((regla) => parseHabilidad(regla, "regla").nombre.toLowerCase() === aporte.concede.nombre.toLowerCase()),
+    );
+}
+
 export default function UnitCard({
   unit,
   variant,
@@ -784,30 +814,7 @@ export default function UnitCard({
   const adjWeapons = adjLoadout.filter((entry) => entry.kind === "weapon");
   const adjGear = adjLoadout.filter((entry) => entry.kind === "gear");
 
-  /**
-   * Lo que el heroe le presta a la unidad entera: cualquier regla cuya
-   * descripcion lo diga de forma expresa —"This model and its unit get X"—, la
-   * lleve el mismo escrita o se la de un objeto de su equipo. "Preacher" es
-   * justo eso: un objeto que concede "Bane in Melee Aura", y esa regla vive en
-   * `rules` del objeto, no en las del heroe — mirar solo `unit.rules` se lo
-   * dejaria fuera. Sin glosario no hay forma de saber que concede cada una, asi
-   * que se deja la lista vacia antes que adivinar.
-   */
-  const aportesDelHeroe: Array<{ nombre: string; concede: Habilidad; alcance: string | null }> =
-    emparejada && adjunta && glosario
-      ? [...new Set([...unit.rules, ...loadout.flatMap((entrada) => entrada.rules)])]
-          .map((etiqueta) => {
-            const nombre = parseHabilidad(etiqueta, "regla").nombre;
-            const aporte = reglaParaLaUnidad(glosario.get(nombre.toLowerCase())?.description, (n) => glosario.has(n.toLowerCase()));
-            return aporte ? { nombre, concede: aporte.concede, alcance: aporte.alcance } : null;
-          })
-          .filter((aporte): aporte is { nombre: string; concede: Habilidad; alcance: string | null } => aporte !== null)
-          // Si la unidad ya lo lleva de por si, no hace falta repetirlo.
-          .filter(
-            (aporte) =>
-              !adjunta.rules.some((regla) => parseHabilidad(regla, "regla").nombre.toLowerCase() === aporte.concede.nombre.toLowerCase()),
-          )
-      : [];
+  const aportes = emparejada && adjunta ? aportesDelHeroe(unit, loadout, adjunta, glosario) : [];
 
   /**
    * La banda de arriba es siempre la misma pieza, tenga la carta uno o dos
@@ -1013,7 +1020,7 @@ export default function UnitCard({
                 nombre={adjunta.name}
                 perfil={adjunta}
                 accion={accionAdjunta}
-                aportesHeroe={aportesDelHeroe}
+                aportesHeroe={aportes}
                 liderazgo={`${unit.quality}+`}
                 glosario={glosario}
                 onAbrir={onHabilidad}

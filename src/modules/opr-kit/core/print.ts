@@ -11,7 +11,7 @@
 export const PAGINA_MM = { ancho: 210, alto: 297, margen: 10 } as const;
 /** Separacion entre cartas en la hoja, en mm: cuenta como una carta mas de
  *  ancho/alto a la hora de ver cuantas caben. */
-const HUECO_MM = 4;
+export const HUECO_MM = 4;
 
 /**
  * Cuantas columnas y filas de una carta de `anchoMm x altoMm` caben de

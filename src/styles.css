@@ -1170,11 +1170,10 @@ fieldset.desnudo { border: 0; padding: 0; margin: 0; min-width: 0; }
 .regla-modal { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 
 /* Las cartas de regla, hechizo y equipo no encogen en movil: a 44 mm por 1.725
-   caben en cualquier telefono, y mas pequenas no se leen. Fuera quedan las
-   vistas de impresion y el PDF, que tienen su propia escala. */
+   caben en cualquier telefono, y mas pequenas no se leen. */
 @media screen and (max-width: 620px) {
   .regla-modal,
-  .army-slide:not(:is(.print-vista, .pdf-a-escala) .army-slide) { --scard-esc: 1.725; }
+  .army-slide { --scard-esc: 1.725; }
 }
 
 
@@ -1401,22 +1400,6 @@ fieldset.desnudo { border: 0; padding: 0; margin: 0; min-width: 0; }
   /* Las galerias y los formularios de subida no pintan nada en papel. */
   .gallery, .uploader { display: none !important; }
 }
-
-/* ── Vista de impresion del ejercito ────────────────────────────────────────
-   El asistente elige entre dos maquetas antes de componer nada: modo libro,
-   una hoja por unidad con sus cartas detras, y modo tarjetas, mazos a tamano
-   real con su reverso listo para recortar. */
-/* En pantalla, el libro se ve como el papel que va a salir: hoja blanca de
-   A4 de ancho con su margen y un borde suave, sea cual sea el tema. */
-@media print {
-  /* El mazo de unidades tarot es mas ancho que alto: una hoja apaisada le
-     cabe una fila de mas. `page` es una pagina con nombre (soporte de
-     Chromium): en un navegador que no la reconozca, estas hojas simplemente
-     salen en la orientacion por defecto —de sobra, no de menos, porque
-     `cuadriculaPorHoja` ya cuenta con lo apaisado al repartir las cartas. */
-  @page tarot { size: A4 landscape; margin: 10mm; }
-}
-
 
 /* ── Cartas de mision ───────────────────────────────────────────────────────
    La misma piel Mini Euro que un hechizo o una regla: numero y nombre en la
