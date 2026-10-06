@@ -1,19 +1,34 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import RuleCard from "@rubenciveira/opr-kit/react/RuleCard";
-import HeroSkillCard from "@rubenciveira/opr-kit/react/HeroSkillCard";
+import TextoConReferencias from "@rubenciveira/opr-kit/react/TextoConReferencias";
 import type { HeroSkillCardData } from "@rubenciveira/opr-kit/react/HeroSkillCard";
+import { useTextos } from "@rubenciveira/opr-kit/react/textos";
+import { conValor, parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
 import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 import type { FilaEjercito, GrupoDeUnidades } from "@rubenciveira/opr-kit/core/unidades";
 import type { CatalogRule } from "../api/catalog";
+import ConfirmDialog from "./ConfirmDialog";
 
-/** A donde mandan sus chips las cartas de unidad: en modo partida, al centro. */
+/** A donde mandan sus chips las cartas de unidad: en modo partida, a la hoja inferior. */
 export interface AbrirDesdeCarta {
   onHabilidad: (habilidad: Habilidad) => void;
   onQuestClassSkill: (skill: HeroSkillCardData) => void;
 }
 
 type Detalle = { tipo: "regla"; habilidad: Habilidad } | { tipo: "clase"; skill: HeroSkillCardData };
+
+/** Los marcadores de una unidad durante la partida. */
+interface EstadoUnidad {
+  activada?: boolean;
+  heridas?: number;
+  desmoralizada?: boolean;
+}
+
+/** Una partida en curso: la ronda y los marcadores de cada unidad, por `FilaEjercito.key`. */
+interface Partida {
+  ronda: number;
+  unidades: Record<string, EstadoUnidad>;
+}
 
 /** Pixeles por milimetro CSS: las cartas miden en mm y el hueco en px. */
 const PX_POR_MM = 96 / 25.4;
@@ -25,13 +40,46 @@ const PX_POR_MM = 96 / 25.4;
 const RESERVA_MEJORAS = 48;
 
 /**
+ * Movil tumbado: la misma consulta que en la hoja de estilos. Ahi la carta se
+ * ajusta al ancho y crece lo que pida su contenido, en vez de encogerse entera
+ * para caber en un alto que no hay.
+ */
+const CONSULTA_TUMBADO = "(min-width: 641px) and (max-height: 500px)";
+
+/** Ancho de cada naipe de la mano, en px: el mismo que en la hoja de estilos. */
+const ANCHO_NAIPE = 110;
+
+/**
+ * Lo minimo que tiene que asomar cada naipe del abanico para leer su nombre y
+ * acertar con el dedo. Si no llega, la mano pasa a una fila con desplazamiento.
+ */
+const ASOMA_MINIMO = 60;
+
+/**
+ * La partida en curso se guarda en este navegador, por ejercito: salir del
+ * modo partida o recargar a media partida no deberia borrar los marcadores.
+ * Solo los quita "Terminar partida".
+ */
+const clavePartida = (armyId: string) => `warhost:partida:${armyId}`;
+
+function leerPartida(armyId: string): Partida | null {
+  try {
+    return JSON.parse(window.localStorage.getItem(clavePartida(armyId)) ?? "null") as Partida | null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * El ejercito para jugar: toda la ventana para una carta en el centro, tan
- * grande como quepa, y abajo el mazo plegado con la unidad actual, que se
- * despliega para saltar a otra. La pantalla completa del navegador va aparte,
- * con su boton: no se impone al entrar. Las habilidades de una carta se abren en ese mismo centro, no en
- * un modal encima, y se vuelve a la unidad desde la barra.
+ * grande como quepa, y abajo el resto de unidades para saltar a otra. Las
+ * habilidades suben en una hoja inferior sin tapar del todo la carta. Con una
+ * partida iniciada, cada unidad lleva sus marcadores (activada, heridas,
+ * desmoralizada) y la barra lleva la ronda. La pantalla completa del navegador
+ * va aparte, con su boton: no se impone al entrar.
  */
 export default function ModoPartida({
+  armyId,
   nombre,
   secciones,
   quest,
@@ -39,26 +87,41 @@ export default function ModoPartida({
   cartaDe,
   onSalir,
 }: {
+  armyId: string;
   nombre: string;
-  /** Las unidades agrupadas como en la vista del ejercito, que es el orden del mazo. */
+  /** Las unidades agrupadas como en la vista del ejercito, que es el orden de la mano. */
   secciones: GrupoDeUnidades<FilaEjercito>[];
   quest: boolean;
   glosario: Map<string, CatalogRule>;
   cartaDe: (fila: FilaEjercito, abrir: AbrirDesdeCarta) => ReactNode;
   onSalir: () => void;
 }) {
+  const t = useTextos();
   const filas = secciones.flatMap((seccion) => seccion.unidades);
   const [claveActual, setClaveActual] = useState(filas[0]?.key ?? "");
-  const [mazoAbierto, setMazoAbierto] = useState(false);
   const [completa, setCompleta] = useState(Boolean(document.fullscreenElement));
   const [detalle, setDetalle] = useState<Detalle | null>(null);
+  const [partida, setPartida] = useState<Partida | null>(() => leerPartida(armyId));
+  const [confirmandoFin, setConfirmandoFin] = useState(false);
   const [hueco, setHueco] = useState({ ancho: 0, alto: 0 });
+  /** El de la mano, que no siempre es el de la carta: con partida, los marcadores le quitan ancho a esta. */
+  const [anchoMano, setAnchoMano] = useState(0);
   const escenaRef = useRef<HTMLDivElement>(null);
-  const mazoRef = useRef<HTMLDivElement>(null);
+  const manoRef = useRef<HTMLElement>(null);
 
   // Si la unidad elegida desaparece de la lista, se cae a la primera.
   const indiceActual = Math.max(0, filas.findIndex((fila) => fila.key === claveActual));
   const actual = filas[indiceActual];
+
+  useEffect(() => {
+    try {
+      if (partida) window.localStorage.setItem(clavePartida(armyId), JSON.stringify(partida));
+      else window.localStorage.removeItem(clavePartida(armyId));
+    } catch {
+      // Sin almacenamiento (navegacion privada) la partida sigue, solo que no
+      // sobrevive a una recarga.
+    }
+  }, [armyId, partida]);
 
   // La pantalla completa la puede quitar el propio navegador (Escape, gesto):
   // el boton sigue a lo que haya de verdad, no a lo ultimo que se pidio.
@@ -76,11 +139,16 @@ export default function ModoPartida({
 
   useEffect(() => {
     const escena = escenaRef.current;
-    if (!escena) return undefined;
-    const observador = new ResizeObserver(([entrada]) =>
-      setHueco({ ancho: entrada.contentRect.width, alto: entrada.contentRect.height }),
-    );
+    const mano = manoRef.current;
+    if (!escena || !mano) return undefined;
+    const observador = new ResizeObserver((entradas) => {
+      for (const { target, contentRect } of entradas) {
+        if (target === escena) setHueco({ ancho: contentRect.width, alto: contentRect.height });
+        else setAnchoMano(contentRect.width);
+      }
+    });
     observador.observe(escena);
+    observador.observe(mano);
     return () => observador.disconnect();
   }, []);
 
@@ -89,7 +157,6 @@ export default function ModoPartida({
     if (!fila) return;
     setClaveActual(fila.key);
     setDetalle(null);
-    setMazoAbierto(false);
   }
 
   function alternarPantallaCompleta() {
@@ -99,14 +166,33 @@ export default function ModoPartida({
     peticion.catch(() => undefined);
   }
 
-  // Con teclado: flechas para pasar de unidad, Escape para plegar el mazo o
-  // volver de una habilidad.
+  const estadoDe = (fila: FilaEjercito): EstadoUnidad => partida?.unidades[fila.key] ?? {};
+
+  function marcar(fila: FilaEjercito, cambio: EstadoUnidad) {
+    setPartida((previa) =>
+      previa && { ...previa, unidades: { ...previa.unidades, [fila.key]: { ...previa.unidades[fila.key], ...cambio } } },
+    );
+  }
+
+  /** La ronda nueva quita las activaciones; heridas y desmoralizacion siguen. */
+  function nuevaRonda() {
+    setPartida(
+      (previa) =>
+        previa && {
+          ronda: previa.ronda + 1,
+          unidades: Object.fromEntries(
+            Object.entries(previa.unidades).map(([clave, estado]) => [clave, { ...estado, activada: false }]),
+          ),
+        },
+    );
+  }
+
+  // Con teclado: flechas para pasar de unidad, Escape para cerrar la hoja. Con
+  // el dialogo de terminar abierto, el Escape es suyo.
   useEffect(() => {
     const conTecla = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (mazoAbierto) setMazoAbierto(false);
-        else setDetalle(null);
-      }
+      if (confirmandoFin) return;
+      if (event.key === "Escape") setDetalle(null);
       else if (event.key === "ArrowRight") elegir(indiceActual + 1);
       else if (event.key === "ArrowLeft") elegir(indiceActual - 1);
     };
@@ -114,36 +200,68 @@ export default function ModoPartida({
     return () => document.removeEventListener("keydown", conTecla);
   });
 
-  // Al desplegar el mazo, la unidad actual a la vista aunque la lista sea larga.
-  useEffect(() => {
-    if (mazoAbierto) mazoRef.current?.querySelector(".activa")?.scrollIntoView({ block: "nearest" });
-  }, [mazoAbierto]);
-
   // La carta se escala entera para llenar el hueco, como hace el resto de la
-  // app con `--ucard-esc` y `--scard-esc` segun el ancho de pantalla.
-  const [anchoMm, altoMm, variable] = detalle
-    ? [44, 68, "--scard-esc"]
-    : [120, quest ? 140 : 70, "--ucard-esc"];
+  // app con `--ucard-esc` segun el ancho de pantalla. El hueco cambia de tamano
+  // al girar la pantalla, y con el se vuelve a pintar y a consultar.
   const conMejoras = Boolean(actual?.principal.upgrades?.length || actual?.adjunta?.upgrades?.length);
-  const reserva = !detalle && conMejoras ? RESERVA_MEJORAS : 0;
+  const reserva = conMejoras ? RESERVA_MEJORAS : 0;
+  const porAncho = hueco.ancho / (120 * PX_POR_MM);
   const escala = Math.max(
     0.3,
-    Math.min(hueco.ancho / (anchoMm * PX_POR_MM), (hueco.alto - reserva) / (altoMm * PX_POR_MM)),
+    window.matchMedia(CONSULTA_TUMBADO).matches
+      ? porAncho
+      : Math.min(porAncho, (hueco.alto - reserva) / ((quest ? 140 : 70) * PX_POR_MM)),
   );
+  // La mano de naipes se abre en abanico hasta donde deja el ancho, con un
+  // naipe y medio de margen a cada lado para lo que se desplazan al girar: con
+  // muchas unidades se solapan mas y se inclinan menos. Si ya no asoma lo
+  // bastante de cada uno, van en fila y se desliza.
+  const huecosMano = Math.max(1, filas.length - 1);
+  const pasoAbanico = (anchoMano - 3 * ANCHO_NAIPE) / huecosMano;
+  const enAbanico = pasoAbanico >= ASOMA_MINIMO;
+  const pasoNaipe = Math.min(70, pasoAbanico);
+  const giroNaipe = Math.min(4, 30 / huecosMano);
+  // En la fila, la unidad elegida se centra sola: con el teclado o al tocar una
+  // del borde, no hay que ir a buscarla.
+  useEffect(() => {
+    const mano = manoRef.current;
+    const activa = mano?.querySelector<HTMLElement>(".activa");
+    if (enAbanico || !mano || !activa) return;
+    mano.scrollTo({ left: activa.offsetLeft - (mano.clientWidth - activa.offsetWidth) / 2, behavior: "smooth" });
+  }, [enAbanico, indiceActual]);
+
   const abrir: AbrirDesdeCarta = {
     onHabilidad: (habilidad) => setDetalle({ tipo: "regla", habilidad }),
     onQuestClassSkill: (skill) => setDetalle({ tipo: "clase", skill }),
   };
+  const activadas = filas.filter((fila) => estadoDe(fila).activada).length;
+  const estadoActual = actual ? estadoDe(actual) : {};
+  // Con un heroe unido el aguante es de dos perfiles distintos: no hay un tope unico.
+  const heridasMax = actual && !actual.adjunta ? actual.principal.maxWounds : undefined;
 
   return (
     <div className="partida" role="dialog" aria-modal="true" aria-label={`Modo partida: ${nombre}`}>
       <header className="partida-barra">
-        {detalle && actual ? (
-          <button type="button" className="partida-volver" onClick={() => setDetalle(null)}>
-            ← {actual.principal.name}
-          </button>
-        ) : null}
         <h1 className="partida-titulo">{nombre}</h1>
+        {/* En pantalla ancha la ronda va en la barra; en un movil de pie, en
+            su propio renglon debajo. */}
+        {partida ? (
+          <div className="partida-ronda">
+            <span className="partida-ronda-texto">
+              <strong>Ronda {partida.ronda}</strong> · {activadas}/{filas.length}
+                <span className="partida-ronda-extra"> activadas</span>
+            </span>
+            <button type="button" onClick={nuevaRonda}>
+              Nueva ronda
+            </button>
+            <button type="button" className="danger" onClick={() => setConfirmandoFin(true)}>
+              Terminar
+            </button>
+            <span className="partida-progreso" aria-hidden="true">
+              <span style={{ width: `${filas.length ? (activadas / filas.length) * 100 : 0}%` }} />
+            </span>
+          </div>
+        ) : null}
         {document.fullscreenEnabled ? (
           <button
             type="button"
@@ -156,80 +274,230 @@ export default function ModoPartida({
             ⛶
           </button>
         ) : null}
-        <button type="button" className="primary" onClick={onSalir}>
-          Salir del modo partida
+        {partida ? null : (
+          <button type="button" onClick={() => setPartida({ ronda: 1, unidades: {} })}>
+            Iniciar partida
+          </button>
+        )}
+        <button type="button" className="primary" title="Salir del modo partida" onClick={onSalir}>
+          Salir
         </button>
       </header>
 
-      {/* `vertical-movil`: en un movil de pie la carta de unidad se recoloca a
-          lo ancho, como en la vista del ejercito, en vez de quedarse en un
-          naipe apaisado diminuto. */}
-      <div
-        ref={escenaRef}
-        className={`partida-escena${detalle ? "" : " vertical-movil"}`}
-        onClick={() => setMazoAbierto(false)}
-        style={{ [variable]: escala } as CSSProperties}
-      >
-        <div className="partida-carta">
-          {detalle?.tipo === "regla" ? (
-            <RuleCard
-              habilidad={detalle.habilidad}
-              regla={glosario.get(detalle.habilidad.nombre.toLowerCase())}
-              glosario={glosario}
-              onAbrir={abrir.onHabilidad}
-            />
-          ) : detalle?.tipo === "clase" ? (
-            <HeroSkillCard skill={detalle.skill} glosario={glosario} onAbrir={abrir.onHabilidad} />
-          ) : actual ? (
-            cartaDe(actual, abrir)
-          ) : null}
-        </div>
-      </div>
 
-      {/* Acordeon: plegado solo dice que unidad se esta viendo; desplegado
-          sube por encima de la carta, sin empujarla ni cambiar su escala. */}
-      <nav className="partida-mazo" aria-label="Unidades">
-        {mazoAbierto ? (
-          <div ref={mazoRef} id="partida-mazo-lista" className="partida-mazo-lista">
-            {secciones.map((seccion) => (
-              <section key={seccion.grupo}>
-                <h2 className="partida-mazo-grupo">
-                  {seccion.etiqueta}
-                  <span className="tab-count">{seccion.unidades.length}</span>
-                </h2>
-                {seccion.unidades.map((fila) => (
-                  <button
-                    key={fila.key}
-                    type="button"
-                    className={fila === actual ? "activa" : undefined}
-                    aria-current={fila === actual ? "true" : undefined}
-                    onClick={() => elegir(filas.indexOf(fila))}
-                  >
-                    {nombreDe(fila)}
-                  </button>
-                ))}
-              </section>
-            ))}
+      {/* Los marcadores van debajo de la carta en un movil de pie y a su
+          derecha con ancho de sobra, donde a la carta le falta alto. */}
+      <div className="partida-centro">
+        {/* `vertical-movil`: en un movil de pie la carta de unidad se recoloca a
+            lo ancho, como en la vista del ejercito, en vez de quedarse en un
+            naipe apaisado diminuto. */}
+        <div
+          ref={escenaRef}
+          className="partida-escena vertical-movil"
+          style={{ "--ucard-esc": escala } as CSSProperties}
+        >
+          <div className={`partida-carta${estadoActual.activada ? " activada" : ""}`}>
+            {actual ? cartaDe(actual, abrir) : null}
+          </div>
+        </div>
+
+        {partida && actual ? (
+          <div className="partida-marcadores" aria-label={`Marcadores de ${nombreDe(actual)}`}>
+            <button
+              type="button"
+              aria-pressed={Boolean(estadoActual.activada)}
+              className={estadoActual.activada ? "marcado" : undefined}
+              onClick={() => marcar(actual, { activada: !estadoActual.activada })}
+            >
+              {estadoActual.activada ? "✓ Activada" : "Activar"}
+            </button>
+            <span className="partida-heridas-control">
+              <button
+                type="button"
+                aria-label="Quitar herida"
+                disabled={!estadoActual.heridas}
+                onClick={() => marcar(actual, { heridas: Math.max(0, (estadoActual.heridas ?? 0) - 1) })}
+              >
+                −
+              </button>
+              <span>
+                Heridas <strong>{estadoActual.heridas ?? 0}</strong>
+                {heridasMax !== undefined ? `/${heridasMax}` : ""}
+              </span>
+              <button
+                type="button"
+                aria-label="Anadir herida"
+                disabled={heridasMax !== undefined && (estadoActual.heridas ?? 0) >= heridasMax}
+                onClick={() => marcar(actual, { heridas: (estadoActual.heridas ?? 0) + 1 })}
+              >
+                +
+              </button>
+            </span>
+            <button
+              type="button"
+              aria-pressed={Boolean(estadoActual.desmoralizada)}
+              className={estadoActual.desmoralizada ? "marcado peligro" : undefined}
+              onClick={() => marcar(actual, { desmoralizada: !estadoActual.desmoralizada })}
+            >
+              Desmoralizada
+            </button>
           </div>
         ) : null}
-        <button
-          type="button"
-          className="partida-mazo-cabecera"
-          aria-expanded={mazoAbierto}
-          aria-controls="partida-mazo-lista"
-          onClick={() => setMazoAbierto((abierto) => !abierto)}
-        >
-          <span className="partida-mazo-actual">{actual ? nombreDe(actual) : "Sin unidades"}</span>
-          <span className="tab-count">
-            {indiceActual + 1}/{filas.length}
-          </span>
-          <span aria-hidden="true">{mazoAbierto ? "▾" : "▴"}</span>
-        </button>
+      </div>
+
+      {/* El resto de unidades asoman abajo como una mano de naipes: en abanico
+          si caben, y si no en fila con desplazamiento lateral. */}
+      <nav ref={manoRef} className={`partida-mano${enAbanico ? "" : " desplazable"}`} aria-label="Unidades">
+        {filas.map((fila, indice) => {
+          const desvio = indice - (filas.length - 1) / 2;
+          const estado = estadoDe(fila);
+          return (
+            <button
+              key={fila.key}
+              type="button"
+              className={[
+                "partida-naipe",
+                fila === actual ? "activa" : "",
+                estado.activada ? "activada" : "",
+                estado.desmoralizada ? "desmoralizada" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-current={fila === actual ? "true" : undefined}
+              title={[nombreDe(fila), ...marcasDe(estado)].join(" · ")}
+              style={
+                enAbanico
+                  ? {
+                      left: `calc(50% - ${ANCHO_NAIPE / 2}px + ${desvio * pasoNaipe}px)`,
+                      transform: `rotate(${desvio * giroNaipe}deg)`,
+                    }
+                  : undefined
+              }
+              onClick={() => elegir(indice)}
+            >
+              <span>
+                {/* A la izquierda del nombre: es lo que asoma, el naipe de la
+                    derecha tapa la otra mitad. */}
+                {estado.heridas ? <em className="partida-naipe-heridas">{estado.heridas}</em> : null}
+                {nombreDe(fila)}
+              </span>
+            </button>
+          );
+        })}
       </nav>
+
+      {/* La habilidad sube en una hoja desde abajo: la carta sigue detras, y
+          tocar fuera la cierra. */}
+      {detalle ? (
+        <div className="partida-hoja-fondo" onClick={() => setDetalle(null)}>
+          <section
+            className="partida-hoja"
+            role="dialog"
+            aria-label={detalle.tipo === "regla" ? detalle.habilidad.nombre : detalle.skill.name}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="partida-hoja-asa" aria-hidden="true" />
+            <header className="partida-hoja-cabecera">
+              <h2>
+                {detalle.tipo === "regla" ? detalle.habilidad.nombre : detalle.skill.name}
+                {detalle.tipo === "regla" && detalle.habilidad.valor ? (
+                  <span className="partida-hoja-valor"> ({detalle.habilidad.valor})</span>
+                ) : null}
+              </h2>
+              <button type="button" className="ghost" aria-label="Cerrar" onClick={() => setDetalle(null)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+            </header>
+            <div className="partida-hoja-cuerpo">
+              {detalle.tipo === "regla" ? (
+                <TextoRegla habilidad={detalle.habilidad} glosario={glosario} onAbrir={abrir.onHabilidad} />
+              ) : (
+                <>
+                  <p className="partida-hoja-sub">
+                    {detalle.skill.className} · {detalle.skill.levelLabel}
+                  </p>
+                  <p>
+                    <TextoConReferencias texto={detalle.skill.description} glosario={glosario} onAbrir={abrir.onHabilidad} />
+                  </p>
+                </>
+              )}
+              <p className="partida-hoja-sub">
+                {detalle.tipo === "regla" && detalle.habilidad.tipo === "equipo" ? t.equipo : t.reglaEspecial}
+              </p>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {confirmandoFin ? (
+        <ConfirmDialog
+          title="Terminar la partida"
+          confirmLabel="Terminar"
+          danger
+          onCancel={() => setConfirmandoFin(false)}
+          onConfirm={() => {
+            setConfirmandoFin(false);
+            setPartida(null);
+          }}
+        >
+          <p>Se quitan la ronda y los marcadores de todas las unidades.</p>
+        </ConfirmDialog>
+      ) : null}
     </div>
+  );
+}
+
+/** El texto de una regla para la hoja: el mismo que su carta, en prosa a lo ancho. */
+function TextoRegla({
+  habilidad,
+  glosario,
+  onAbrir,
+}: {
+  habilidad: Habilidad;
+  glosario: Map<string, CatalogRule>;
+  onAbrir: (habilidad: Habilidad) => void;
+}) {
+  const t = useTextos();
+  const regla = glosario.get(habilidad.nombre.toLowerCase());
+  const texto = regla ? conValor(regla.description, habilidad.valor) : null;
+  const concede = habilidad.concede?.map((nombre) => parseHabilidad(nombre, "regla")) ?? [];
+  return (
+    <>
+      {texto ? (
+        <p>
+          <TextoConReferencias texto={texto} glosario={glosario} onAbrir={onAbrir} propio={habilidad.nombre} />
+        </p>
+      ) : concede.length === 0 ? (
+        <p className="muted">{t.sinTexto}</p>
+      ) : null}
+      {concede.length > 0 ? (
+        <p>
+          {t.concede}{" "}
+          {concede.map((una, indice) => (
+            <span key={una.nombre}>
+              {indice > 0 ? ", " : ""}
+              <button type="button" className="regla-mencion" onClick={() => onAbrir(una)}>
+                {una.etiqueta}
+              </button>
+            </span>
+          ))}
+        </p>
+      ) : null}
+    </>
   );
 }
 
 function nombreDe(fila: FilaEjercito): string {
   return fila.adjunta ? `${fila.principal.name} + ${fila.adjunta.name}` : fila.principal.name;
+}
+
+/** Los marcadores de una unidad en palabras, para el aviso de su naipe. */
+function marcasDe(estado: EstadoUnidad): string[] {
+  return [
+    estado.activada ? "Activada" : "",
+    estado.heridas ? `${estado.heridas} ${estado.heridas === 1 ? "herida" : "heridas"}` : "",
+    estado.desmoralizada ? "Desmoralizada" : "",
+  ].filter(Boolean);
 }

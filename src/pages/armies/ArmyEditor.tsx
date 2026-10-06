@@ -1190,9 +1190,10 @@ export default function ArmyEditor() {
 
   if (loading) return <Spinner />;
 
-  if (jugando) {
+  if (army && jugando) {
     return (
       <ModoPartida
+        armyId={army.$id}
         nombre={form.name}
         secciones={agruparUnidades(filasEjercito)}
         quest={quest}
