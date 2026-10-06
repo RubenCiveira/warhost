@@ -1,6 +1,6 @@
 import type { Models } from "appwrite";
-import type { GameSystemId, Setting } from "@warhost/opr-kit/core/gameSystems";
-import type { HeroClass as CoreHeroClass } from "@warhost/opr-kit/core/model";
+import type { GameSystemId, Setting } from "@rubenciveira/opr-kit/core/gameSystems";
+import type { HeroClass as CoreHeroClass } from "@rubenciveira/opr-kit/core/model";
 
 export type Row = Models.Row;
 

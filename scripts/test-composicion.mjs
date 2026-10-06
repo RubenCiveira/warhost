@@ -20,7 +20,7 @@ import { join } from "node:path";
 
 const dir = await mkdtemp(join(tmpdir(), "warhost-comp-"));
 const salida = join(dir, "composicion.mjs");
-await build({ entryPoints: ["packages/opr-kit/src/core/composicion.ts"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/composicion.js"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const { limitesComposicion, verificacionesComposicion } = await import(salida);
 // Las pruebas de aqui abajo se escribieron contra la forma vieja, de "solo lo
 // que falla": se mantiene como envoltorio fino sobre la nueva, que ademas

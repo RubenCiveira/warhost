@@ -1,6 +1,6 @@
 import { ID, Permission, Query, Role, storage, tables } from "../lib/appwrite";
 import { TABLES, env } from "../lib/env";
-import type { GameSystemId, Setting } from "@warhost/opr-kit/core/gameSystems";
+import type { GameSystemId, Setting } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { Army } from "../lib/types";
 
 export interface ArmyDraft {

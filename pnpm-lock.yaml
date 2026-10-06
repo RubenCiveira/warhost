@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@warhost/opr-kit':
-        specifier: workspace:*
-        version: link:packages/opr-kit
+      '@rubenciveira/opr-kit':
+        specifier: ^0.1.0
+        version: 0.1.0
       appwrite:
         specifier: ^27.0.0
         version: 27.0.0
@@ -55,7 +55,6 @@ importers:
         specifier: ^6.0.0
         version: 6.4.3(@types/node@26.5.0)
 
-  packages/opr-kit: {}
 
 packages:
 
@@ -603,6 +602,9 @@ packages:
     resolution: {integrity: sha512-at8QVep6S3h5Y6gSbdGU06bRY5WJkf6WUduM9YtvYMbYhB1MOFfUgc6kehitQXzOtMSaT70q7f9ydPhpqu821w==}
     cpu: [x64]
     os: [win32]
+
+  '@rubenciveira/opr-kit@0.1.0':
+    resolution: {integrity: sha512-m5MlhjjqLNretJ8cCHzw0NYB2IGLShf3pmjGWJfLbXn3WjbfQS6Bgd7jaXHXY8hQB7081Hdcp4wHcbk5RURrOQ==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -1491,6 +1493,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.63.1':
     optional: true
+
+  '@rubenciveira/opr-kit@0.1.0': {}
 
   '@types/babel__core@7.20.5':
     dependencies:

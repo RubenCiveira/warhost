@@ -53,8 +53,8 @@ await build({
       import { renderToStaticMarkup } from "react-dom/server";
       import UnitCard from "./src/components/UnitCard";
       import RuleCard from "./src/components/RuleCard";
-      import { baseLoadout } from "./packages/opr-kit/src/core/loadout";
-      import { parseHabilidad } from "./packages/opr-kit/src/core/reglas";
+      import { baseLoadout } from "@rubenciveira/opr-kit/core/loadout";
+      import { parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
       const UNITS = ${JSON.stringify(elegidas)};
       globalThis.__HTML__ = UNITS.map((u) =>
         renderToStaticMarkup(

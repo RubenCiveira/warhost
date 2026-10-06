@@ -13,7 +13,7 @@ import { join } from "node:path";
 const CLI_CWD = process.env.APPWRITE_DIR ?? "../warhost-appwrite";
 const dir = await mkdtemp(join(tmpdir(), "warhost-aura-"));
 const salida = join(dir, "auras.mjs");
-await build({ entryPoints: ["packages/opr-kit/src/core/auras.ts"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/auras.js"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const { reglaDelAura, reglaParaLaUnidad } = await import(salida);
 
 const cli = (args) =>

@@ -1,6 +1,6 @@
 import type { CatalogRule } from "../api/catalog";
-import { conValor, parseHabilidad } from "@warhost/opr-kit/core/reglas";
-import type { Habilidad } from "@warhost/opr-kit/core/reglas";
+import { conValor, parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
+import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 import { densidadScard } from "../lib/cardDensity";
 import TextoConReferencias from "./TextoConReferencias";
 

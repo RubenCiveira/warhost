@@ -5,10 +5,10 @@
  * asistente de anadir unidad— y si cada uno montara su propio JSON acabarian
  * divergiendo en silencio.
  */
-import { buildArmy, serializeEntries } from "@warhost/opr-kit/core/builder";
-import type { BuilderEntry, ExtraSectionsForEntry, UpgradeSection } from "@warhost/opr-kit/core/builder";
-import { getGameSystem } from "@warhost/opr-kit/core/gameSystems";
-import type { GameSystemId, Setting } from "@warhost/opr-kit/core/gameSystems";
+import { buildArmy, serializeEntries } from "@rubenciveira/opr-kit/core/builder";
+import type { BuilderEntry, ExtraSectionsForEntry, UpgradeSection } from "@rubenciveira/opr-kit/core/builder";
+import { getGameSystem } from "@rubenciveira/opr-kit/core/gameSystems";
+import type { GameSystemId, Setting } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { HeroClass } from "./types";
 
 export interface LibroDeOrigen {

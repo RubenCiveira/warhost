@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useGameSystem } from "../../context/GameSystemContext";
 import { useAuth } from "../../context/AuthContext";
 import { listHeroClasses, saveHeroClass } from "../../api/content";
-import { isQuestSystem } from "@warhost/opr-kit/core/gameSystems";
+import { isQuestSystem } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { HeroClass } from "../../lib/types";
 import { errorMessage } from "../../lib/format";
 import { EmptyState, ErrorBanner, PageHead, Spinner } from "../../components/ui";

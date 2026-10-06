@@ -1,6 +1,6 @@
 import { Query, tables } from "../lib/appwrite";
 import { TABLES, env } from "../lib/env";
-import type { GameSystemId, Setting } from "@warhost/opr-kit/core/gameSystems";
+import type { GameSystemId, Setting } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { HeroClass, Mission, QuestShopPackage, Rule } from "../lib/types";
 
 export async function listRules(setting: Setting): Promise<Rule[]> {
@@ -88,7 +88,7 @@ export async function saveHeroClass(
   return conId(row);
 }
 
-/** El `id` neutro que lee `@warhost/opr-kit`: el de la fila de Appwrite. */
+/** El `id` neutro que lee `@rubenciveira/opr-kit`: el de la fila de Appwrite. */
 function conId(row: HeroClass): HeroClass {
   return { ...row, id: row.$id };
 }

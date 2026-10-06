@@ -1,18 +1,18 @@
 import { useMemo, useState } from "react";
 import { catalogImageUrl, groupImages, pickCover, pickImageByType, targetKeyFor } from "../api/catalog";
 import type { ArmyBook, ArmyUnit, CatalogImage, CatalogRule } from "../api/catalog";
-import { sectionsForUnit } from "@warhost/opr-kit/core/builder";
-import type { UpgradeSection } from "@warhost/opr-kit/core/builder";
-import type { ResolvedUnit } from "@warhost/opr-kit/core/armyForgeResolve";
-import { baseLoadout } from "@warhost/opr-kit/core/loadout";
-import { agruparUnidades } from "@warhost/opr-kit/core/unidades";
-import { puedeTenerCaster } from "@warhost/opr-kit/core/faccion";
-import { parseSpells, reglasMencionadasEnHechizos } from "@warhost/opr-kit/core/spells";
+import { sectionsForUnit } from "@rubenciveira/opr-kit/core/builder";
+import type { UpgradeSection } from "@rubenciveira/opr-kit/core/builder";
+import type { ResolvedUnit } from "@rubenciveira/opr-kit/core/armyForgeResolve";
+import { baseLoadout } from "@rubenciveira/opr-kit/core/loadout";
+import { agruparUnidades } from "@rubenciveira/opr-kit/core/unidades";
+import { puedeTenerCaster } from "@rubenciveira/opr-kit/core/faccion";
+import { parseSpells, reglasMencionadasEnHechizos } from "@rubenciveira/opr-kit/core/spells";
 import { FichaOpcionesLibro, FichaUnidadLibro } from "./ArmyPrintView";
 import LoreText from "./LoreText";
 import SpellCard from "./SpellCard";
 import RuleCard from "./RuleCard";
-import { parseHabilidad } from "@warhost/opr-kit/core/reglas";
+import { parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
 
 function unidadResuelta(unit: ArmyUnit): ResolvedUnit {
   return {

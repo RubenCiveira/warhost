@@ -1,13 +1,13 @@
 import { ExecutionMethod } from "appwrite";
 import { functions } from "../lib/appwrite";
 import { env } from "../lib/env";
-import { getGameSystem } from "@warhost/opr-kit/core/gameSystems";
-import { gameSystemOf, requiredBookUids, resolveList } from "@warhost/opr-kit/core/armyForgeResolve";
-import type { ArmyBookSummary, ArmyForgeList, ForgeArmyBook, ResolvedList } from "@warhost/opr-kit/core/armyForgeResolve";
-import type { GameSystem } from "@warhost/opr-kit/core/gameSystems";
+import { getGameSystem } from "@rubenciveira/opr-kit/core/gameSystems";
+import { gameSystemOf, requiredBookUids, resolveList } from "@rubenciveira/opr-kit/core/armyForgeResolve";
+import type { ArmyBookSummary, ArmyForgeList, ForgeArmyBook, ResolvedList } from "@rubenciveira/opr-kit/core/armyForgeResolve";
+import type { GameSystem } from "@rubenciveira/opr-kit/core/gameSystems";
 
-export { extractListId, listUrl, parseStoredList } from "@warhost/opr-kit/core/armyForgeResolve";
-export type { ArmyBookSummary, ArmyForgeList, ResolvedList, ResolvedUnit } from "@warhost/opr-kit/core/armyForgeResolve";
+export { extractListId, listUrl, parseStoredList } from "@rubenciveira/opr-kit/core/armyForgeResolve";
+export type { ArmyBookSummary, ArmyForgeList, ResolvedList, ResolvedUnit } from "@rubenciveira/opr-kit/core/armyForgeResolve";
 
 /** Respuesta del proxy: `data` es lo que devuelve Army Forge tal cual. */
 interface ProxyResponse<T> {

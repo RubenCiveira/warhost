@@ -33,8 +33,8 @@ const dir = await mkdtemp(join(tmpdir(), "warhost-audit-op-"));
 const salida = join(dir, "lib.mjs");
 await build({
   stdin: {
-    contents: `export { parseSections, sectionsForUnit } from "./packages/opr-kit/src/core/builder";
-               export { baseLoadout } from "./packages/opr-kit/src/core/loadout";`,
+    contents: `export { parseSections, sectionsForUnit } from "@rubenciveira/opr-kit/core/builder";
+               export { baseLoadout } from "@rubenciveira/opr-kit/core/loadout";`,
     resolveDir: process.cwd(), loader: "ts",
   },
   outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error",

@@ -12,7 +12,7 @@ import { join } from "node:path";
 
 const dir = await mkdtemp(join(tmpdir(), "warhost-adj-"));
 const salida = join(dir, "builder.mjs");
-await build({ entryPoints: ["packages/opr-kit/src/core/builder.ts"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/builder.js"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const B = await import(salida);
 
 let fallos = 0;

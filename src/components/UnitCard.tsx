@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
-import { normalizeLoadout } from "@warhost/opr-kit/core/loadout";
-import type { LoadoutEntry } from "@warhost/opr-kit/core/loadout";
-import { maxDistinctOptions, optionCost, optionId } from "@warhost/opr-kit/core/builder";
-import type { UpgradeOption, UpgradeSection } from "@warhost/opr-kit/core/builder";
+import { normalizeLoadout } from "@rubenciveira/opr-kit/core/loadout";
+import type { LoadoutEntry } from "@rubenciveira/opr-kit/core/loadout";
+import { maxDistinctOptions, optionCost, optionId } from "@rubenciveira/opr-kit/core/builder";
+import type { UpgradeOption, UpgradeSection } from "@rubenciveira/opr-kit/core/builder";
 import IconoArma from "./IconoArma";
-import { parseHabilidad } from "@warhost/opr-kit/core/reglas";
-import { desglosarOpcion } from "@warhost/opr-kit/core/opciones";
-import { reglaDelAura, reglaParaLaUnidad } from "@warhost/opr-kit/core/auras";
-import type { Habilidad } from "@warhost/opr-kit/core/reglas";
+import { parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
+import { desglosarOpcion } from "@rubenciveira/opr-kit/core/opciones";
+import { reglaDelAura, reglaParaLaUnidad } from "@rubenciveira/opr-kit/core/auras";
+import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 import type { HeroSkillCardData } from "./HeroSkillCard";
 import LoreText from "./LoreText";
 

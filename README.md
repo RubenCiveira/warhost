@@ -55,7 +55,7 @@ pnpm test:edit       # compone, guarda, rehidrata y modifica un ejercito
 ```
 
 Ninguna de las dos necesita navegador: ejecutan los modulos que se despliegan
-(`packages/opr-kit/src/core/armyForgeResolve.ts` y `.../builder.ts`), que estan separados de la
+(`armyForgeResolve` y `builder` de `@rubenciveira/opr-kit`), que estan separados de la
 capa de red justamente para poder ejercitarlos desde Node. `test:builder` lee de
 Appwrite con la CLI, que toma el proyecto del repo del backend; si lo tienes en
 otro sitio, pasale `APPWRITE_DIR`.
@@ -63,9 +63,6 @@ otro sitio, pasale `APPWRITE_DIR`.
 ## Como esta montado
 
 ```
-packages/
-  opr-kit/     @warhost/opr-kit: logica de ejercitos (constructor, reglas,
-               importacion de Army Forge) sin depender de ningun backend
 src/
   lib/         cliente de Appwrite, tipos de fila, formato
   api/         una funcion por operacion contra Appwrite; nada de SDK en las vistas
@@ -77,11 +74,21 @@ src/
 Las vistas nunca hablan con el SDK directamente: todo pasa por `src/api`, que es
 donde viven los ids de tabla, las consultas y los permisos de fila.
 
-`@warhost/opr-kit` es un paquete del workspace de pnpm pensado para publicarse y
-reutilizarse en otras aplicaciones, asi que no puede importar nada de `src/`.
-Sus tipos (`core/model.ts`) solo declaran los campos que la logica lee: las
-filas de Appwrite encajan tal cual, salvo `HeroClass`, cuyo `id` neutro rellena
-`src/api/content.ts` a partir del `$id`.
+La logica de ejercitos (constructor, reglas, importacion de Army Forge) vive
+aparte, en [`@rubenciveira/opr-kit`](https://github.com/RubenCiveira/opr-kit), para
+poder reutilizarla en otras aplicaciones. Sus tipos (`core/model`) solo declaran
+los campos que la logica lee: las filas de Appwrite encajan tal cual, salvo
+`HeroClass`, cuyo `id` neutro rellena `src/api/content.ts` a partir del `$id`.
+
+Para tocar el paquete y probarlo aqui sin publicarlo, clonalo al lado y
+enlazalo. `pnpm link` anade un `overrides` a `package.json` y al lockfile que no
+hay que subir: para volver a la version publicada, quitalo y `pnpm install`.
+
+```bash
+git clone https://github.com/RubenCiveira/opr-kit ../opr-kit
+(cd ../opr-kit && pnpm install && pnpm build --watch) &
+pnpm link ../opr-kit
+```
 
 ## Acceso
 

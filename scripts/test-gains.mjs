@@ -13,9 +13,9 @@ const outfile = join(dir, "gains.mjs");
 await build({
   stdin: {
     contents: `
-      export { ruleLabelsFromGains } from "./packages/opr-kit/src/core/armyForgeGains";
-      export { parseSections } from "./packages/opr-kit/src/core/builder";
-      export { puedeTenerCaster } from "./packages/opr-kit/src/core/faccion";
+      export { ruleLabelsFromGains } from "@rubenciveira/opr-kit/core/armyForgeGains";
+      export { parseSections } from "@rubenciveira/opr-kit/core/builder";
+      export { puedeTenerCaster } from "@rubenciveira/opr-kit/core/faccion";
     `,
     resolveDir: process.cwd(),
     loader: "ts",

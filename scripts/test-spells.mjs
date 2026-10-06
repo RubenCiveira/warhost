@@ -14,7 +14,7 @@ const CLI_CWD = process.env.APPWRITE_DIR ?? "../warhost-appwrite";
 
 const dir = await mkdtemp(join(tmpdir(), "warhost-"));
 const outfile = join(dir, "spells.mjs");
-await build({ entryPoints: ["packages/opr-kit/src/core/spells.ts"], outfile, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/spells.js"], outfile, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const { parseSpells, byThreshold } = await import(outfile);
 
 const books = rows("army_books");

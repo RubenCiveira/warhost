@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { GAME_SYSTEMS, isGameSystemId } from "@warhost/opr-kit/core/gameSystems";
-import type { GameSystem, GameSystemId } from "@warhost/opr-kit/core/gameSystems";
+import { GAME_SYSTEMS, isGameSystemId } from "@rubenciveira/opr-kit/core/gameSystems";
+import type { GameSystem, GameSystemId } from "@rubenciveira/opr-kit/core/gameSystems";
 
 const STORAGE_KEY = "gf:gameSystem";
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { filterRules, listRules } from "../api/content";
-import type { GameSystemId, Setting } from "@warhost/opr-kit/core/gameSystems";
+import type { GameSystemId, Setting } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { Rule } from "../lib/types";
 import { errorMessage } from "../lib/format";
 import { ErrorBanner, Spinner } from "./ui";

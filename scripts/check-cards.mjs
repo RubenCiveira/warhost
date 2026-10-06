@@ -69,9 +69,9 @@ await build({
       import { renderToStaticMarkup } from "react-dom/server";
       import UnitCard from "./src/components/UnitCard";
       import SpellCard from "./src/components/SpellCard";
-      import { baseLoadout } from "./packages/opr-kit/src/core/loadout";
-      import { parseSpells } from "./packages/opr-kit/src/core/spells";
-      import { parseSections, sectionsForUnit } from "./packages/opr-kit/src/core/builder";
+      import { baseLoadout } from "@rubenciveira/opr-kit/core/loadout";
+      import { parseSpells } from "@rubenciveira/opr-kit/core/spells";
+      import { parseSections, sectionsForUnit } from "@rubenciveira/opr-kit/core/builder";
       const UNITS = ${JSON.stringify(unidades)};
       const PAQUETES = new Map(${JSON.stringify(paquetes)}.map(([k, v]) => [k, parseSections(v)]));
       const BOOKS = ${JSON.stringify(libros.map((l) => ({ name: l.name, spells: l.spells })))};

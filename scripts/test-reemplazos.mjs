@@ -21,8 +21,8 @@ const carga = async (entrada, nombre) => {
   await build({ entryPoints: [entrada], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
   return import(salida);
 };
-const L = await carga("packages/opr-kit/src/core/loadout.ts", "loadout.mjs");
-const B = await carga("packages/opr-kit/src/core/builder.ts", "builder.mjs");
+const L = await carga("node_modules/@rubenciveira/opr-kit/dist/core/loadout.js", "loadout.mjs");
+const B = await carga("node_modules/@rubenciveira/opr-kit/dist/core/builder.js", "builder.mjs");
 
 const filas = (tabla, queries) =>
   JSON.parse(

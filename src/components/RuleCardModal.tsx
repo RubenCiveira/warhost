@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import RuleCard from "./RuleCard";
 import type { CatalogRule } from "../api/catalog";
-import type { Habilidad } from "@warhost/opr-kit/core/reglas";
+import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 
 /** La carta de una habilidad, abierta desde su chip. */
 export default function RuleCardModal({

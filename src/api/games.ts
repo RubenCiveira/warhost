@@ -1,6 +1,6 @@
 import { Channel, ID, Permission, Query, Role, client, tables } from "../lib/appwrite";
 import { TABLES, env } from "../lib/env";
-import type { GameSystemId, Setting } from "@warhost/opr-kit/core/gameSystems";
+import type { GameSystemId, Setting } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { Game, GamePlayer, GameResult, GameUnit } from "../lib/types";
 
 const ACCEPTED = Role.label("aceptado");
