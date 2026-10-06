@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@rubenciveira/opr-kit':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.2.0
+        version: 0.2.0(@types/react@19.2.18)(react@19.2.8)
       appwrite:
         specifier: ^27.0.0
         version: 27.0.0
@@ -54,7 +54,6 @@ importers:
       vite:
         specifier: ^6.0.0
         version: 6.4.3(@types/node@26.5.0)
-
 
 packages:
 
@@ -603,8 +602,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rubenciveira/opr-kit@0.1.0':
-    resolution: {integrity: sha512-m5MlhjjqLNretJ8cCHzw0NYB2IGLShf3pmjGWJfLbXn3WjbfQS6Bgd7jaXHXY8hQB7081Hdcp4wHcbk5RURrOQ==}
+  '@rubenciveira/opr-kit@0.2.0':
+    resolution: {integrity: sha512-uektJOa3KJCVqR7ztf3U2nncoN7pwsteWjVx247x74RWTLPwRHnvtLI+CZwqo1OJ8pg1xGKeK0EsliXvJmVUZw==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -1494,7 +1495,13 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.63.1':
     optional: true
 
-  '@rubenciveira/opr-kit@0.1.0': {}
+  '@rubenciveira/opr-kit@0.2.0(@types/react@19.2.18)(react@19.2.8)':
+    dependencies:
+      react: 19.2.8
+      react-markdown: 10.1.0(@types/react@19.2.18)(react@19.2.8)
+    transitivePeerDependencies:
+      - '@types/react'
+      - supports-color
 
   '@types/babel__core@7.20.5':
     dependencies:
