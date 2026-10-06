@@ -1141,6 +1141,14 @@ fieldset.desnudo { border: 0; padding: 0; margin: 0; min-width: 0; }
    mira, no un dialogo con una carta dentro. */
 .regla-modal { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 
+/* Las cartas de regla, hechizo y equipo no encogen en movil: a 44 mm por 1.725
+   caben en cualquier telefono, y mas pequenas no se leen. Fuera quedan las
+   vistas de impresion y el PDF, que tienen su propia escala. */
+@media screen and (max-width: 620px) {
+  .regla-modal,
+  .army-slide:not(:is(.print-vista, .pdf-a-escala) .army-slide) { --scard-esc: 1.725; }
+}
+
 
 /* Una carta de habilidad abierta desde dentro de un dialogo: tiene que quedar
    por encima de el, no debajo. */
