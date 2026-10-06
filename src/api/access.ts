@@ -58,5 +58,5 @@ export async function requestAccess(message?: string): Promise<AccessRequestResu
 }
 
 export async function sendVerificationEmail(): Promise<void> {
-  await account.createEmailVerification({ url: `${window.location.origin}/verify` });
+  await account.createEmailVerification({ url: `${window.location.origin}${import.meta.env.BASE_URL}verify` });
 }

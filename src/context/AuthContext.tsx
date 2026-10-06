@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await account.create({ userId: ID.unique(), email, password, name });
       await account.createEmailPasswordSession({ email, password });
       // El correo de verificacion dispara la funcion que encola la solicitud de acceso.
-      await account.createEmailVerification({ url: `${window.location.origin}/verify` });
+      await account.createEmailVerification({ url: `${window.location.origin}${import.meta.env.BASE_URL}verify` });
       await refresh();
     },
     [refresh],
@@ -89,8 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = useCallback(() => {
     account.createOAuth2Session({
       provider: OAuthProvider.Google,
-      success: `${window.location.origin}/`,
-      failure: `${window.location.origin}/login?error=oauth`,
+      success: `${window.location.origin}${import.meta.env.BASE_URL}`,
+      failure: `${window.location.origin}${import.meta.env.BASE_URL}login?error=oauth`,
     });
   }, []);
 
