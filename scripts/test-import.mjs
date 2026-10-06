@@ -1,6 +1,6 @@
 /**
  * Ejercita la importacion contra Army Forge de verdad, con el mismo codigo que
- * se despliega: importa node_modules/@rubenciveira/opr-kit/dist/core/armyForgeResolve.js y solo sustituye la capa de
+ * se despliega: importa src/modules/opr-kit/core/armyForgeResolve.ts y solo sustituye la capa de
  * red, que en el navegador pasa por el proxy de Appwrite.
  *
  *   pnpm test:import [urlOId] ...
@@ -25,7 +25,7 @@ const CASOS = process.argv.slice(2).length
 const dir = await mkdtemp(join(tmpdir(), "warhost-"));
 const outfile = join(dir, "resolve.mjs");
 await build({
-  entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/armyForgeResolve.js"],
+  entryPoints: ["src/modules/opr-kit/core/armyForgeResolve.ts"],
   outfile,
   format: "esm",
   bundle: true,

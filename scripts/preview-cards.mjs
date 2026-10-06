@@ -9,7 +9,7 @@
  *   pnpm preview:cards [bookKey] [grimdark|fantasy]
  */
 import { build } from "esbuild";
-import { REACT_UNICO } from "./react-unico.mjs";
+import { ALIAS_OPR_KIT } from "./alias-opr-kit.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
@@ -49,7 +49,7 @@ const dir = await mkdtemp(join(tmpdir(), "warhost-preview-"));
 const salidaJs = join(dir, "cartas.cjs");
 
 await build({
-  alias: REACT_UNICO,
+  alias: ALIAS_OPR_KIT,
   stdin: {
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
@@ -95,7 +95,7 @@ const html = join(dir, "preview.html");
 await writeFile(
   html,
   `<!doctype html><html lang="es" data-setting="${TEMA}"><head><meta charset="utf-8">
-   <style>${readFileSync("node_modules/@rubenciveira/opr-kit/dist/styles.css", "utf8")}</style><style>${readFileSync("src/styles.css", "utf8")}</style>
+   <style>${readFileSync("src/modules/opr-kit/styles.css", "utf8")}</style><style>${readFileSync("src/styles.css", "utf8")}</style>
    <style>body{padding:24px;display:flex;flex-direction:column;gap:22px;align-items:flex-start}</style>
    </head><body>${globalThis.__HTML__}</body></html>`,
 );

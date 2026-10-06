@@ -1,0 +1,918 @@
+/* @rubenciveira/opr-kit — cartas e impresion.
+ *
+ * Importalo una vez en la aplicacion:
+ *   import "@rubenciveira/opr-kit/styles.css";
+ *
+ * Tema: dos ambientaciones, grimdark por defecto y fantasy con
+ * `<html data-setting="fantasy">`. Los colores salen de las variables --opr-*,
+ * definidas aqui con especificidad cero: cualquier `:root { --opr-accent: … }`
+ * de la aplicacion las sustituye.
+ *
+ * Tipografias: "Saira Condensed" para rotulos e "IBM Plex Sans" para el texto.
+ * El paquete no las carga; sin ellas se usa la sans-serif del sistema.
+ *
+ * Los botones de las barras de impresion llevan `primary` y las notas `muted`:
+ * son las clases que la aplicacion puede estilar para integrarlos. */
+
+:where(:root) {
+  --opr-accent: #f2a71b;
+  --opr-accent-2: #f2a71b;
+  --opr-band-letter: 0.045em;
+  --opr-band-transform: uppercase;
+  --opr-band-variant: normal;
+  --opr-border: #333b40;
+  --opr-border-strong: #47525a;
+  --opr-muted: #8b959b;
+  --opr-raise: 0 14px 30px rgba(0, 0, 0, 0.5);
+  --opr-surface: #161a1d;
+  --opr-text: #e4e7e8;
+}
+
+:where(:root[data-setting="fantasy"]) {
+  --opr-accent: #7c2a22;
+  --opr-accent-2: #a97e2e;
+  --opr-band-letter: 0.02em;
+  --opr-band-transform: none;
+  --opr-band-variant: small-caps;
+  --opr-border: #b4a074;
+  --opr-border-strong: #977f4f;
+  --opr-muted: #6c5c3f;
+  --opr-raise: 0 12px 26px rgba(58, 42, 18, 0.28);
+  --opr-surface: #f4ecd6;
+  --opr-text: #2b2013;
+}
+
+
+
+.lore-markdown { white-space: normal; }
+.lore-markdown > *:first-child { margin-top: 0; }
+.lore-markdown > *:last-child { margin-bottom: 0; }
+.lore-markdown h2, .lore-markdown h3, .lore-markdown h4 {
+  margin: 0.9em 0 0.35em; font-family: "Saira Condensed", sans-serif;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.lore-markdown p { margin: 0 0 0.75em; }
+.lore-markdown ul, .lore-markdown ol { margin: 0 0 0.75em 1.2em; padding: 0; }
+.lore-markdown li + li { margin-top: 0.2em; }
+/* Carta apaisada de 120 x 70 mm: una carta de tarot.
+ *
+ * Toda la maqueta va en milimetros, como en kt-cartas, y no en pixeles ni en
+ * rem: es un objeto fisico, y asi lo que se ve en pantalla y lo que saldria por
+ * la impresora son la misma carta. Las medidas de aqui —paddings, cuerpos,
+ * anchos de caja— estan tomadas de sus fichas de datos.
+ *
+ * Nada va a sangre: la cabecera es una barra embutida con las puntas matadas y
+ * el armamento otra pieza debajo, las dos con aire alrededor. Es lo que hace que
+ * la carta se lea como una lamina y no como una tabla dentro de un marco.
+ *
+ * El material sigue al tema: en grimdark la carta es vitela clara sobre fondo de
+ * acero; en fantasy es la misma piel del resto. El "trim" es el papel del color
+ * de arquetipo de kt-cartas: ata el borde de la carta, la cabecera del
+ * armamento y los iconos. Va en un tono medio a proposito, porque el color de
+ * realce del tema como relleno de media carta se come todo lo demas. */
+
+/* El aumento es solo de pantalla: al imprimir vuelve a 1 y la carta sale a los
+   120 x 70 mm de una tarot de verdad. En pantalla se mira de lejos y con el
+   raton, asi que se agranda; los chips se pulsan mejor y las reglas de arma se
+   leen sin acercarse. */
+:root { --ucard-w: 120mm; --ucard-h: 70mm; --ucard-esc: 0.63; --scard-esc: 0.945; }
+@media (min-width: 401px) { :root { --ucard-esc: 0.76; --scard-esc: 1.14; } }
+@media (min-width: 621px) { :root { --ucard-esc: 1.15; --scard-esc: 1.725; } }
+@media (min-width: 901px) { :root { --ucard-esc: 1.45; } }
+@media print { :root { --ucard-esc: 1; --scard-esc: 1; } }
+
+.ucard-wrap { width: calc(var(--ucard-w) * var(--ucard-esc)); }
+.ucard-wrap.personaje { width: calc(var(--ucard-w) * var(--ucard-esc)); }
+
+/* El marco recorta la carta escalada y es quien ocupa sitio en la maqueta: la
+   carta de dentro sigue midiendo 120 x 70 mm pase lo que pase. */
+.ucard-frame {
+  width: calc(var(--ucard-w) * var(--ucard-esc));
+  height: calc(var(--ucard-h) * var(--ucard-esc));
+  overflow: hidden;
+}
+.ucard-frame.personaje { height: calc(var(--ucard-h) * 2 * var(--ucard-esc)); }
+
+.ucard {
+  --ucard-tinta: #201a12;
+  --ucard-papel: #f4efe3;
+  --ucard-cebra: #ebe5d7;
+  --ucard-tenue: #7c7361;
+  --ucard-filete: #d3ccb9;
+  --ucard-trim: #4e5a63;
+  --ucard-banda: #14181f;
+  --ucard-banda-texto: #f5f0e4;
+  --ucard-realce: var(--opr-accent);
+  width: var(--ucard-w);
+  height: var(--ucard-h);
+  position: relative;
+  transform: scale(var(--ucard-esc));
+  transform-origin: top left;
+  display: flex;
+  flex-direction: column;
+  background: var(--ucard-papel);
+  color: var(--ucard-tinta);
+  border: 0.6mm solid var(--ucard-trim);
+  border-radius: 2.5mm;
+  overflow: hidden;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  box-shadow: var(--opr-raise);
+}
+
+:root[data-setting="fantasy"] .ucard {
+  --ucard-trim: #8a7550;
+  --ucard-banda: #2b2013;
+  --ucard-banda-texto: #f2e6c9;
+  --ucard-realce: var(--opr-accent-2);
+}
+
+/* Cabecera: barra embutida, con el titulo y los atributos como piezas de una
+   misma tira. Las puntas de los extremos matadas, el resto a escuadra. */
+.ucard-head {
+  display: flex; align-items: stretch; gap: 0.8mm;
+  padding: 1.6mm 2mm 1mm;
+  flex: 0 0 auto;
+}
+.ucard-avatar {
+  width: 13mm; height: 100%; min-height: 9.8mm; object-fit: cover; flex: 0 0 auto;
+  border: 0.45mm solid var(--ucard-banda); border-radius: 1.2mm 0 1.2mm 0;
+  clip-path: polygon(9% 0, 100% 0, 91% 100%, 0 100%);
+}
+.ucard-title {
+  flex: 1; margin: 0; min-width: 0;
+  display: flex; align-items: center;
+  padding: 0 2mm; border-radius: 0.8mm 0 0 0.8mm;
+  background: var(--ucard-banda); color: var(--ucard-banda-texto);
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 3.4mm; line-height: 1.1;
+  letter-spacing: var(--opr-band-letter);
+  text-transform: var(--opr-band-transform);
+  font-variant: var(--opr-band-variant);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* El heroe de quest lleva nombre propio y, debajo, su clase y tipo de
+   unidad: la banda del titulo pasa a dos renglones apretados solo entonces. */
+.ucard-title.con-subtitulo {
+  flex-direction: column; align-items: flex-start; justify-content: center;
+  gap: 0.2mm; line-height: 1.05;
+}
+.ucard-title-nombre { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ucard-subtitulo {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 2.1mm; font-weight: 500; letter-spacing: 0; text-transform: none;
+  font-variant: normal; opacity: 0.85;
+}
+.ucard-stats { display: flex; gap: 0.8mm; flex: 0 0 auto; }
+.ucard-stat {
+  z-index: 1; width: 9.5mm; padding: 0.9mm 0 0.7mm; text-align: center;
+  background: var(--ucard-banda); color: var(--ucard-banda-texto);
+}
+.ucard.personaje { height: calc(var(--ucard-h) * 2); }
+.ucard-stats.quest { gap: 0.55mm; }
+.ucard-stats.quest .ucard-stat { width: 7.9mm; }
+.ucard-stats.quest .ucard-stat-key { font-size: 1.75mm; letter-spacing: 0.02em; }
+.ucard-stats.quest .ucard-stat-value { font-size: 2.85mm; }
+.ucard-stat:last-child { border-radius: 0 0.8mm 0.8mm 0; }
+.ucard-stat-key {
+  display: block; color: var(--ucard-realce);
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 2mm; line-height: 1.2; letter-spacing: 0.06em;
+  text-transform: var(--opr-band-transform); font-variant: var(--opr-band-variant);
+}
+.ucard-stat-value { display: block; font-weight: 600; font-size: 3.2mm; line-height: 1.1; font-variant-numeric: tabular-nums; }
+
+.ucard-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* Armamento: pieza propia, embutida, con la cabecera en el trim y los costados
+   cerrados. Es la tabla que mas se consulta, y va a todo el ancho util. */
+.ucard-armas { padding: 0 2.5mm; flex: 0 0 auto; }
+.ucard-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  font-size: 2.6mm; line-height: 1.25;
+  border: 0.35mm solid var(--ucard-trim); border-radius: 1mm; overflow: hidden;
+}
+.ucard-table thead th {
+  background: var(--ucard-trim); color: var(--ucard-banda-texto);
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 2.2mm; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0.7mm 1.4mm; text-align: left;
+}
+.ucard-table td { padding: 0.7mm 1.4mm; vertical-align: middle; }
+.ucard-table tbody tr:nth-child(odd) { background: var(--ucard-cebra); }
+.ucard-table .num { text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ucard-table td:first-child { overflow: hidden; text-overflow: ellipsis; }
+.ucard-wrules { color: #575043; }
+/* Las reglas de arma tambien son chips: se pulsan para ver su carta. Van mas
+   apretadas que las de la unidad porque comparten fila con el perfil. */
+.ucard-chips-arma { gap: 0.7mm; }
+.ucard-chips-arma .ucard-chip { font-size: 2.2mm; padding: 0.3mm 1.1mm; }
+.ucard.hoja .ucard-chips-arma .ucard-chip { font-size: 2.5mm; padding: 0.5mm 1.4mm; }
+.ucard-count { color: var(--ucard-tenue); font-variant-numeric: tabular-nums; margin-right: 0.6mm; }
+/* Va en la banda de titulo, con su tipografia, no como una pegatina encima: es
+   parte de lo que la unidad es, igual que su nombre. */
+.ucard-combinada {
+  margin-left: 2mm; padding: 0.3mm 1.4mm;
+  font-size: 2.1mm; letter-spacing: 0.08em; text-transform: uppercase;
+  border: 0.3mm solid currentColor; border-radius: 0.8mm;
+  color: var(--ucard-realce); vertical-align: middle;
+}
+.ucard-mas-heroe { margin-left: 1.6mm; font-weight: 600; opacity: 0.82; }
+.ucard.emparejada .ucard-title { font-size: 3mm; }
+
+/* Carta de un heroe con su unidad unida: mismo tamano de tarot que cualquier
+   otra ficha, nada de marco mas alto. La banda de arriba es la de siempre
+   —Cal y Def no se pueden sumar entre los dos, asi que ahi solo quedan Min y
+   Pts, que si son de la pareja entera— y el cuerpo se parte en dos columnas
+   apretadas, cada una el perfil completo de un lado, con su boton de
+   configurar al fondo. */
+.ucard-body-par { flex-direction: row; align-items: stretch; }
+.ucard-columna { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; padding: 1mm 1.6mm 0.8mm; }
+.ucard-columna + .ucard-columna { border-left: 0.35mm solid var(--ucard-filete); }
+
+/* Nombre y Cal/Def/Her en un solo renglon: el nombre se lleva el hueco que
+   sobra y se recorta con puntos suspensivos antes que empujar los datos a una
+   segunda linea, que en un tarot de 70 mm no sobra. */
+.ucard-columna-cab { display: flex; align-items: baseline; gap: 1.4mm; margin-bottom: 0.6mm; }
+.ucard-columna-nombre {
+  flex: 1 1 auto; min-width: 0;
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 2.1mm; letter-spacing: 0.03em; text-transform: uppercase;
+  color: var(--ucard-tenue);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ucard-columna-mini {
+  flex: 0 0 auto; display: flex; gap: 1.1mm; white-space: nowrap;
+  font-weight: 600; font-size: 1.8mm; font-variant-numeric: tabular-nums;
+  text-transform: uppercase; letter-spacing: 0.02em;
+}
+.ucard-columna-mini > span + span { padding-left: 1.1mm; border-left: 0.3mm solid var(--ucard-filete); }
+/* Dentro de la columna el padding lateral ya lo pone ella; las piezas que
+   traian el suyo propio para ir a todo el ancho de la carta se lo quitan. */
+.ucard-columna .ucard-armas,
+.ucard-columna .ucard-bloque { padding-left: 0; padding-right: 0; margin-top: 0.9mm; }
+.ucard-columna .ucard-table { font-size: 1.95mm; }
+.ucard-columna .ucard-table td { padding: 0.35mm 0.9mm; }
+.ucard-columna .ucard-bloque-title { font-size: 1.8mm; margin-bottom: 0.4mm; }
+.ucard-columna .ucard-chips { gap: 0.5mm; }
+.ucard-columna .ucard-chip { font-size: 1.85mm; padding: 0.3mm 1mm; }
+.ucard-columna .ucard-vacio { font-size: 1.85mm; }
+.ucard-columna .ucard-mas { font-size: 1.75mm; margin: 0.4mm 0 0; }
+.ucard-columna .ucard-accion { padding: 0.8mm 0 0; }
+
+/* "El mando aporta": lo que el heroe unido le presta a la unidad, aparte de lo
+   suyo. Va al final de la columna, justo antes de Configurar. */
+.ucard-mando { margin-top: 0.9mm; }
+/* El liderazgo, en una pastilla rellena y no un contorno en el naranja
+   apagado de acento —eso se perdia entre las fichas de arma, y esto es justo
+   lo que hay que ver rapido. */
+.ucard-chip-liderazgo {
+  background: var(--ucard-trim); color: var(--ucard-banda-texto); border-color: var(--ucard-trim);
+  font-family: "Saira Condensed", sans-serif; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase; cursor: default;
+}
+.ucard-chip-liderazgo b { color: var(--opr-accent); font-size: 1.15em; }
+
+.ucard-accion { margin-top: auto; padding: 1.5mm 2.5mm 0; display: flex; justify-content: flex-end; gap: 1.2mm; }
+.ucard-accion button {
+  font-family: "Saira Condensed", sans-serif;
+  font-size: 2.6mm; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0.9mm 2.4mm; cursor: pointer;
+  color: var(--ucard-banda-texto); background: var(--ucard-banda);
+  border: 0; border-radius: 0.9mm;
+}
+.ucard-accion button:hover { background: var(--ucard-trim); }
+.ucard-accion button:focus-visible { outline: 0.5mm solid var(--ucard-realce); outline-offset: 0.4mm; }
+/* En las cartas cargadas encoge con el resto: la mas apretada del catalogo se
+   pasaba siete pixeles con el boton a tamano normal. */
+.ucard.denso .ucard-accion { padding-top: 1mm; }
+.ucard.denso .ucard-accion button { font-size: 2.3mm; padding: 0.6mm 2mm; }
+.ucard.muy-denso .ucard-accion { padding-top: 0.6mm; }
+.ucard.muy-denso .ucard-accion button { font-size: 2.1mm; padding: 0.4mm 1.8mm; }
+@media print { .ucard-accion { display: none; } }
+
+.ucard-notas {
+  margin: 1.2mm 0 0; padding: 1mm 2.5mm 0; font-size: 2.3mm; line-height: 1.3;
+  color: var(--ucard-tinta);
+}
+.ucard-lore {
+  margin: 1.2mm 0 0; padding: 1mm 2.5mm 0; font-size: 2.25mm; line-height: 1.25;
+  color: var(--ucard-tenue); border-left: 0.5mm solid var(--ucard-filete);
+}
+.ucard-lore-intro { margin: 0 0 1.4mm; padding: 0.8mm 2.5mm 0.8mm; }
+.ucard-lore h2, .ucard-lore h3, .ucard-lore h4 { font-size: 1.05em; }
+.ucard-lore p, .ucard-lore ul, .ucard-lore ol { margin-bottom: 0.45em; }
+.ucard-notas .ucard-label { color: var(--ucard-tenue); margin-right: 1.2mm; }
+
+.ucard-accion { margin-top: auto; padding: 1.5mm 2.5mm 0; display: flex; justify-content: flex-end; gap: 1.2mm; }
+.ucard-accion button {
+  font-family: "Saira Condensed", sans-serif;
+  font-size: 2.6mm; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0.9mm 2.4mm; cursor: pointer;
+  color: var(--ucard-banda-texto); background: var(--ucard-banda);
+  border: 0; border-radius: 0.9mm;
+}
+.ucard-accion button:hover { background: var(--ucard-trim); }
+.ucard-accion button:focus-visible { outline: 0.5mm solid var(--ucard-realce); outline-offset: 0.4mm; }
+/* En las cartas cargadas encoge con el resto: la mas apretada del catalogo se
+   pasaba siete pixeles con el boton a tamano normal. */
+.ucard.denso .ucard-accion { padding-top: 1mm; }
+.ucard.denso .ucard-accion button { font-size: 2.3mm; padding: 0.6mm 2mm; }
+.ucard.muy-denso .ucard-accion { padding-top: 0.6mm; }
+.ucard.muy-denso .ucard-accion button { font-size: 2.1mm; padding: 0.4mm 1.8mm; }
+@media print { .ucard-accion { display: none; } }
+
+.ucard-notas { font-size: 2.7mm; }
+.ucard-mas { margin: 0.8mm 0 0; font-size: 2.2mm; color: var(--ucard-tenue); font-style: italic; }
+
+/* El icono de tipo de arma, con hueco fijo para que los nombres sigan
+   alineados aunque una fila no lo lleve. */
+.ucard-arma { display: flex; align-items: center; gap: 1.2mm; min-width: 0; }
+.ucard-arma-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arma-icono { color: var(--ucard-trim); display: block; }
+/* A distancia se dibujan las dos versiones y manda el material del tema. */
+.arma-arco { display: none; }
+:root[data-setting="fantasy"] .arma-balas { display: none; }
+:root[data-setting="fantasy"] .arma-arco { display: block; }
+
+/* El cuerpo se apila: armamento, reglas innatas y equipo. Antes iban reglas y
+   equipo en dos columnas, pero el equipo necesita ancho para enseñar lo que
+   concede, y las reglas se recorren mejor en una fila larga que en media. */
+.ucard-bloque { margin-top: 2.4mm; padding: 0 2.5mm; flex: 0 0 auto; }
+
+/* Rotulo de bloque. Sin esto el h4 hereda el titular del sistema y sale con
+   cuerpo de cabecera dentro de una carta de 70 mm de alto. */
+.ucard-bloque-title {
+  margin: 0 0 1mm;
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 2.2mm; line-height: 1.2;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ucard-tenue);
+}
+
+/* En quest los atributos van en su propia columna, estrecha: son pocos y
+   cortos ("Fuerza 4+"), y asi reglas y equipo se quedan con el ancho que de
+   verdad necesitan (ver el comentario de mas arriba sobre por que esos dos no
+   van a columnas). */
+.ucard-quest-cols { display: flex; gap: 3mm; margin-top: 2.4mm; padding: 0 2.5mm; flex: 0 0 auto; }
+.ucard-quest-atributos { flex: 0 0 27mm; }
+.ucard-quest-habilidades { flex: 1; min-width: 0; }
+.ucard-quest-habilidades .ucard-bloque, .ucard-quest-habilidades .ucard-armas { margin-top: 0; padding: 0; }
+.ucard-quest-habilidades .ucard-bloque + * { margin-top: 1.6mm; }
+.ucard-atributos-list { margin: 0; display: flex; flex-direction: column; gap: 0.6mm; }
+.ucard-atributo-fila { display: flex; justify-content: space-between; gap: 2mm; font-size: 2.4mm; }
+.ucard-atributo-fila dt { color: var(--ucard-tenue); }
+.ucard-atributo-fila dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ucard-quest-campana { margin-top: 2mm; }
+.ucard-campana-list { margin: 0; display: grid; gap: 0.8mm; }
+.ucard-campana-fila { display: grid; grid-template-columns: 1fr 9mm; gap: 1.2mm; align-items: end; font-size: 2.2mm; }
+.ucard-campana-fila dt { color: var(--ucard-tenue); }
+.ucard-campana-fila dd {
+  min-height: 4.2mm; margin: 0; border: 0.35mm solid var(--ucard-filete);
+  border-radius: 1mm; text-align: center; font-weight: 600;
+  font-variant-numeric: tabular-nums; line-height: 3.6mm;
+}
+.ucard.personaje .ucard-body { padding-bottom: 2mm; }
+.ucard-personaje { flex: 1; min-height: 0; display: grid; grid-template-rows: auto 42mm 1fr; gap: 2.4mm; padding: 0 2.5mm; }
+.ucard-personaje-armas .ucard-armas, .ucard-personaje-equipo .ucard-armas { padding: 0; }
+.ucard-personaje-arriba { display: grid; grid-template-columns: 27mm 1fr; gap: 3mm; min-height: 0; }
+.ucard-personaje-campana, .ucard-personaje-habilidades, .ucard-personaje-equipo { min-width: 0; }
+.ucard-personaje-habilidades { display: flex; flex-direction: column; gap: 1.8mm; }
+.ucard-personaje-campana .ucard-quest-atributos, .ucard-personaje-habilidades .ucard-bloque { margin: 0; padding: 0; }
+.ucard-personaje-equipo { align-self: stretch; border-top: 0.45mm solid var(--ucard-filete); padding-top: 2mm; }
+.ucard-personaje-equipo > .ucard-bloque-title { margin-bottom: -0.3mm; }
+.ucard-personaje-equipo .ucard-bloque { margin-top: 0; padding: 0; }
+.ucard.personaje .ucard-campana-list { gap: 1mm; }
+.ucard.personaje .ucard-campana-fila { grid-template-columns: 1fr 10mm; font-size: 2.3mm; }
+.ucard.personaje .ucard-campana-fila dd { min-height: 5.6mm; line-height: 5mm; }
+.ucard.personaje .ucard-quest-skills .ucard-chips { gap: 1.1mm; }
+.ucard.personaje .ucard-quest-skills .ucard-chip { font-size: 2.45mm; padding: 0.7mm 1.4mm; }
+.ucard.personaje .ucard-table { font-size: 2.55mm; }
+
+/* La tabla de equipo es la misma pieza que la de armas, con el objeto a la
+   izquierda y lo que otorga a la derecha. */
+.ucard-equipo-tabla { table-layout: fixed; }
+.ucard-equipo-tabla th:first-child, .ucard-equipo-tabla td:first-child { width: 38%; }
+.ucard-equipo-tabla td { vertical-align: middle; }
+.ucard-equipo-tabla td:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ucard-vacio { margin: 0; font-size: 2.38mm; color: var(--ucard-tenue); }
+
+/* Cartas cargadas: se aprieta la tipografia del cuerpo en vez de recortar, como
+   hacen las secciones compactas de kt-cartas. La cabecera no se toca, que es lo
+   que da la identidad de la carta de un vistazo. */
+.ucard.denso .ucard-table { font-size: 2.4mm; }
+.ucard.denso .ucard-table td { padding-top: 0.5mm; padding-bottom: 0.5mm; }
+.ucard.denso .ucard-chip, .ucard.denso .ucard-vacio { font-size: 2.2mm; }
+.ucard.muy-denso .ucard-table { font-size: 2.2mm; }
+.ucard.muy-denso .ucard-table td { padding-top: 0.35mm; padding-bottom: 0.35mm; }
+.ucard.muy-denso .ucard-chip, .ucard.muy-denso .ucard-vacio { font-size: 2.05mm; }
+
+/* Lo que no es perfil de la unidad cuelga del marco, ya fuera de la carta. */
+.ucard-upgrades { margin: 8px 0 0; font-size: 0.84rem; line-height: 1.45; }
+.ucard-label {
+  display: inline-block; margin-right: 6px;
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 0.66rem; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--opr-muted);
+}
+
+.ucard-options { margin-top: 8px; border-top: 1px solid var(--ucard-filete); padding-top: 8px; }
+.ucard-options summary {
+  cursor: pointer; color: var(--opr-accent);
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase;
+}
+/* En la ficha las opciones no se pliegan, asi que esto es un rotulo y no un
+   mando: misma tipografia que los demas rotulos de la carta, sin color de
+   accion ni cursor que invite a pulsarlo. */
+.ucard-options-title {
+  margin: 0 0 1mm; color: var(--ucard-tenue);
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.ucard-section { margin-top: 8px; }
+.ucard-section-head { margin: 0 0 3px; font-size: 0.8rem; font-weight: 600; }
+.ucard-limit { color: var(--ucard-tenue); font-weight: 400; }
+.ucard-option-list { list-style: none; margin: 0; padding: 0; font-size: 0.82rem; }
+.ucard-option-list li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 4px; }
+/* La opcion se elige antes de comprarla, asi que sus reglas van como chips y
+   se consultan igual que las de la unidad. El perfil —alcance y ataques— no:
+   ese se lee de un vistazo. */
+.ucard-option-cuerpo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8mm; min-width: 0; }
+.ucard-option-gain { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8mm; }
+.ucard-option-gain + .ucard-option-gain::before {
+  content: "+"; color: var(--ucard-tenue); margin-right: 0.2mm;
+}
+.ucard-option-perfil { color: var(--ucard-tenue); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* El chip se ata al tamano de su fila y no al de la ficha: si no, hereda los
+   2,8 mm de los chips de la unidad y sale mas grande que el nombre de la
+   opcion, que es justo al reves de lo que se quiere leer primero. */
+.ucard .ucard-option-cuerpo .ucard-chip { font-size: 1em; padding: 0.1mm 0.9mm; line-height: 1.2; }
+.ucard.hoja .ucard-option-cuerpo .ucard-chip { font-size: 1em; padding: 0.2mm 1mm; }
+.ucard-option-list li:nth-child(odd) { background: var(--ucard-cebra); }
+.ucard-price { font-variant-numeric: tabular-nums; color: var(--ucard-tenue); white-space: nowrap; padding-right: 1mm; }
+
+.ucard-foot {
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--opr-border);
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+
+/* Las cartas no se estiran: la rejilla coloca piezas del ancho que miden. */
+.ucard-grid {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(auto-fill, calc(var(--ucard-w) * var(--ucard-esc)));
+  justify-content: start;
+}
+.ucard-spell { width: auto; height: auto; transform: none; display: block; }
+.ucard-spell .ucard-title { font-size: 0.95rem; white-space: normal; }
+.ucard-spell .ucard-body { display: block; padding: 11px 12px; }
+.ucard-effect { margin: 0; font-size: 0.88rem; line-height: 1.5; }
+
+.ucard-option-controls { gap: 6px; flex-wrap: nowrap; }
+/* De pie, en formato Mini Euro (44 x 68 mm): mas pequena que la carta de
+   tarot de la unidad, porque aqui no hay perfil ni tabla, solo un valor y un
+   efecto. Comparte material con .ucard pero no su reparto. */
+
+:root { --scard-w: 44mm; --scard-h: 68mm; }
+
+.scard-frame {
+  width: calc(var(--scard-w) * var(--scard-esc));
+  height: calc(var(--scard-h) * var(--scard-esc));
+  overflow: hidden;
+}
+
+.scard {
+  --ucard-tinta: #201a12;
+  --ucard-papel: #f4efe3;
+  --ucard-tenue: #7c7361;
+  --ucard-filete: #d3ccb9;
+  --ucard-trim: #4e5a63;
+  --ucard-banda: #14181f;
+  --ucard-banda-texto: #f5f0e4;
+  --ucard-realce: var(--opr-accent);
+  width: var(--scard-w);
+  height: var(--scard-h);
+  transform: scale(var(--scard-esc));
+  transform-origin: top left;
+  display: flex; flex-direction: column;
+  background: var(--ucard-papel);
+  color: var(--ucard-tinta);
+  border: 0.6mm solid var(--ucard-trim);
+  border-radius: 2.5mm;
+  overflow: hidden;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  box-shadow: var(--opr-raise);
+}
+
+:root[data-setting="fantasy"] .scard {
+  --ucard-trim: #8a7550;
+  --ucard-banda: #2b2013;
+  --ucard-banda-texto: #f2e6c9;
+  --ucard-realce: var(--opr-accent-2);
+}
+
+.scard-head { display: flex; align-items: stretch; gap: 0.5mm; padding: 1.1mm 1.3mm 0.7mm; flex: 0 0 auto; }
+.scard-title {
+  flex: 1; margin: 0; min-width: 0;
+  display: flex; align-items: center;
+  padding: 0.8mm 1.3mm; border-radius: 0.6mm 0 0 0.6mm;
+  background: var(--ucard-banda); color: var(--ucard-banda-texto);
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 2.625mm; line-height: 1.12;
+  letter-spacing: var(--opr-band-letter);
+  text-transform: var(--opr-band-transform);
+  font-variant: var(--opr-band-variant);
+}
+.scard-valor {
+  flex: 0 0 auto; width: 11.25mm; padding: 0.7mm 0 0.55mm; text-align: center;
+  background: var(--ucard-banda); color: var(--ucard-banda-texto);
+  border-radius: 0 0.6mm 0.6mm 0;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.scard-valor-key {
+  color: var(--ucard-realce);
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 1.47mm; line-height: 1.2; letter-spacing: 0.06em;
+  text-transform: var(--opr-band-transform); font-variant: var(--opr-band-variant);
+}
+.scard-valor-num { font-weight: 600; font-size: 3.675mm; line-height: 1.05; font-variant-numeric: tabular-nums; }
+
+/* El efecto se lee de arriba abajo, pegado a la cabecera: en Mini Euro el
+   cuerpo ya no sobra tanto como para centrarlo. */
+.scard-body {
+  flex: 1; min-height: 0; overflow: hidden;
+  display: flex; align-items: flex-start;
+  padding: 1.2mm 1.8mm;
+}
+/* En 44x68mm ya no sobra sitio como en la tarot: el hechizo mas largo del
+   catalogo son 209 caracteres y cabe holgado, pero algunas reglas y equipo
+   pasan de 500 y necesitan los escalones de abajo. */
+.scard-efecto { margin: 0; font-size: 2.73mm; line-height: 1.32; }
+.scard.denso .scard-efecto { font-size: 2.31mm; line-height: 1.24; }
+
+.scard-foot {
+  flex: 0 0 auto; padding: 1mm 1.8mm 1.3mm;
+  border-top: 0.3mm solid var(--ucard-filete);
+  display: flex; flex-direction: column; gap: 0.4mm;
+  font-size: 2.7mm; color: var(--ucard-tenue);
+}
+.scard-faccion {
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; letter-spacing: 0.08em;
+  text-transform: var(--opr-band-transform); font-variant: var(--opr-band-variant);
+  color: var(--ucard-trim);
+}
+.scard-tirada { font-style: italic; }
+
+/* Una regla sin texto no se disimula: se dice, y se distingue de una con el. */
+.scard-sin-texto { color: var(--ucard-tenue); font-style: italic; }
+/* Se pulsan para abrir su carta, asi que tienen que parecer pulsables sin
+   convertirse en botones de interfaz: siguen siendo tipografia de la ficha. */
+
+.ucard-chips { display: flex; flex-wrap: wrap; gap: 1mm; }
+.ucard-chip {
+  /* Los botones del sistema van en versales condensadas; un chip no: lleva el
+     nombre propio de una regla del juego —"Battleborn"— y a 2,4 mm en caja alta
+     cuesta leerlo. Aqui manda la tipografia de la carta. */
+  font: inherit; font-size: 2.38mm; line-height: 1.25;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-weight: 500; letter-spacing: 0; text-transform: none;
+  padding: 0.6mm 1.6mm;
+  background: var(--ucard-cebra); color: var(--ucard-tinta);
+  border: 0.25mm solid var(--ucard-filete); border-radius: 0.8mm;
+  cursor: pointer;
+}
+.ucard-chip:hover:not(:disabled) { border-color: var(--ucard-trim); background: #e2dbc8; color: var(--ucard-tinta); }
+.ucard-chip:disabled { opacity: 1; cursor: default; }
+.ucard-chip:focus-visible { outline: 0.4mm solid var(--ucard-trim); outline-offset: 0.3mm; }
+.ucard-chip .valor { font-variant-numeric: tabular-nums; font-weight: 600; margin-left: 0.2mm; }
+/* Sin descripcion que enseñar: se marca en punteado y no invita a pulsar. */
+.ucard-chip.sin-texto { border-style: dashed; color: var(--ucard-tenue); }
+.ucard-chip.equipo { background: transparent; }
+
+/* Un aura y la regla que concede son una sola cosa que se lee de izquierda a
+   derecha, asi que van pegadas y comparten marco. El segundo tramo va hundido
+   —sin fondo y con la tinta apagada— porque es la consulta, no la regla que
+   lleva la unidad. */
+.ucard-chip-doble { display: inline-flex; align-items: stretch; max-width: 100%; }
+.ucard-chip-doble .ucard-chip:first-child {
+  border-top-right-radius: 0; border-bottom-right-radius: 0; border-right-width: 0;
+}
+.ucard-chip-concede {
+  border-top-left-radius: 0; border-bottom-left-radius: 0;
+  background: transparent; color: var(--ucard-tenue);
+}
+.ucard-chip-concede::before {
+  content: "→"; margin-right: 0.6mm; opacity: 0.7;
+}
+.ucard-chip-concede:hover:not(:disabled) { color: var(--ucard-tinta); background: #e2dbc8; }
+
+/* Una mencion a otra regla dentro de un texto libre: sin caja, para no romper
+   la lectura de la frase, pero marcada como pulsable. */
+.regla-mencion {
+  font: inherit; color: inherit; background: none; border: none; padding: 0;
+  cursor: pointer; text-decoration: underline dotted; text-underline-offset: 0.2em;
+}
+.regla-mencion:hover { color: var(--ucard-trim, var(--opr-accent)); }
+
+.scard-concede { margin: 1.4mm 0 0; font-size: 2.1mm; color: var(--ucard-tenue); }
+.scard.denso .scard-concede { font-size: 1.84mm; }
+/* La otra cara de la misma pieza: 190 x 134 mm, dos por A4 con margenes de
+   10 mm. Existe porque una unidad del catalogo sin sus opciones de
+   configuracion esta a medias, y esas no caben en una carta de mesa: hay
+   unidades con 8 secciones y 36 opciones.
+ *
+ * Comparte todo con la carta de tarot —banda, tabla de armas, chips— y solo
+ * cambia de caja y mete las opciones dentro. */
+
+:root { --uhoja-w: 190mm; --uhoja-h: 134mm; --uhoja-esc: 0.44; }
+@media (min-width: 701px) { :root { --uhoja-esc: 0.6; } }
+@media (min-width: 1001px) { :root { --uhoja-esc: 0.86; } }
+@media (min-width: 1301px) { :root { --uhoja-esc: 1.05; } }
+
+.ucard-wrap.hoja { width: calc(var(--uhoja-w) * var(--uhoja-esc)); }
+.ucard-frame.hoja {
+  width: calc(var(--uhoja-w) * var(--uhoja-esc));
+  height: calc(var(--uhoja-h) * var(--uhoja-esc));
+}
+.ucard.hoja {
+  width: var(--uhoja-w); height: var(--uhoja-h);
+  transform: scale(var(--uhoja-esc));
+}
+
+/* Con el doble de ancho, la banda y el armamento pueden respirar. */
+.ucard.hoja .ucard-title { font-size: 4.4mm; }
+.ucard.hoja.con-miniatura .ucard-head { align-items: flex-end; min-height: 33mm; padding-top: 2mm; }
+.ucard.hoja.con-miniatura .ucard-title { min-height: 12mm; }
+.ucard.hoja.con-miniatura .ucard-miniatura {
+  position: absolute; top: 0; left: 50%; height: 40mm; max-height: none; object-fit: cover;
+  border: 0; border-radius: 0; box-shadow: none; object-position: top;
+}
+.ucard.hoja.con-miniatura .ucard-stats {
+  align-self: flex-end; width: auto; flex-wrap: nowrap; justify-content: flex-end;
+}
+.ucard.hoja.con-miniatura .ucard-stat { width: 13mm; }
+/* La miniatura mide 40mm pero la cabecera solo reserva 33mm: sin lore, que
+   normalmente absorbe esos 7mm de sobra con su fondo semitransparente, la
+   foto pisaba la primera tabla. */
+.ucard.hoja.con-miniatura .ucard-body:not(:has(.ucard-lore-intro)) { padding-top: 7mm; }
+.ucard.hoja .ucard-stat { width: 13mm; padding: 1.2mm 0 1mm; }
+.ucard.hoja .ucard-stat-key { font-size: 2.4mm; }
+.ucard.hoja .ucard-stat-value { font-size: 4.2mm; }
+.ucard.hoja .ucard-table { font-size: 3mm; }
+.ucard.hoja .ucard-table thead th { font-size: 2.5mm; }
+.ucard.hoja .ucard-chip { font-size: 2.8mm; padding: 0.8mm 2mm; }
+.ucard.hoja .ucard-bloque-title { font-size: 2.5mm; }
+.ucard.hoja .ucard-lore-intro {
+  width: 55%; overflow: hidden; font-size: 2.5mm; line-height: 1.28;
+  border-left: 0; border-top: 0.35mm solid var(--ucard-filete);
+  border-bottom: 0.35mm solid var(--ucard-filete); background: rgba(255, 255, 255, 0.24);
+}
+
+/* Las opciones, dentro y a dos columnas: con 36 en el peor caso, en una sola
+   no entrarian. Las secciones no se parten entre columnas. */
+.ucard-opciones-dentro { flex: 1; min-height: 0; overflow: hidden; }
+.ucard.hoja .ucard-options { margin-top: 0; border-top: 0.3mm solid var(--ucard-filete); padding-top: 1.6mm; }
+.ucard.hoja .ucard-options-title { font-size: 2.6mm; }
+.ucard.hoja .ucard-secciones { columns: 3; column-gap: 4mm; margin-top: 1.4mm; }
+.ucard.hoja .ucard-section { margin: 0 0 2mm; break-inside: avoid; }
+.ucard.hoja .ucard-section-head { font-size: 2.9mm; }
+.ucard.hoja .ucard-option-list { font-size: 2.9mm; }
+.ucard.hoja .ucard-option-list li { padding: 0.4mm 0.9mm; }
+
+/* Una unidad puede llegar a 8 secciones y 36 opciones: cuando se acumulan, la
+   ficha aprieta el bloque de opciones en vez de recortarlo. */
+.ucard.hoja.opciones-densas .ucard-secciones { columns: 3; }
+.ucard.hoja.opciones-densas .ucard-section-head,
+.ucard.hoja.opciones-densas .ucard-option-list { font-size: 2.6mm; }
+.ucard.hoja.opciones-densas .ucard-section { margin-bottom: 1.4mm; }
+.ucard.hoja.opciones-muy-densas .ucard-secciones { columns: 3; }
+.ucard.hoja.opciones-muy-densas .ucard-section-head,
+.ucard.hoja.opciones-muy-densas .ucard-option-list { font-size: 2.35mm; }
+.ucard.hoja.opciones-muy-densas .ucard-option-list li { padding: 0.15mm 0.6mm; }
+.ucard.hoja.opciones-muy-densas .ucard-section { margin-bottom: 1.2mm; }
+/* El ultimo escalon es para las tres o cuatro unidades del catalogo con seis
+   secciones y treinta opciones largas. Antes que recortarlas en silencio,
+   aprietan. */
+.ucard.hoja.opciones-extremas .ucard-secciones { columns: 3; column-gap: 3.5mm; }
+.ucard.hoja.opciones-extremas .ucard-section-head,
+.ucard.hoja.opciones-extremas .ucard-option-list { font-size: 1.9mm; line-height: 1.1; }
+.ucard.hoja.opciones-extremas .ucard-option-list li { padding: 0.1mm 0.5mm; }
+.ucard.hoja.opciones-extremas .ucard-section { margin-bottom: 0.7mm; }
+/* En la ficha mas cargada el marco del chip es justo lo que no cabe. Se cae el
+   marco, no la funcion: sigue siendo un boton y sigue abriendo la carta de la
+   regla, solo que subrayado en vez de encajonado. */
+.ucard.hoja.opciones-extremas .ucard-option-cuerpo .ucard-chip {
+  border: 0; background: transparent; padding: 0;
+  text-decoration: underline dotted; text-underline-offset: 0.3mm;
+}
+.ucard.hoja.opciones-extremas .ucard-option-cuerpo .ucard-chip.sin-texto { text-decoration: none; }
+@media print {
+  :root { --uhoja-esc: 1; }
+  /* Y que las cartas mantengan su color de papel salga o no marcado ese
+     mismo ajuste: sin esto, desmarcarlo dejaba las cartas transparentes. */
+  .ucard, .scard, .print-dorso { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .ucard.hoja { box-shadow: none; }
+}
+.print-vista { max-width: 900px; margin: 0 auto; padding: 16px; }
+.print-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.print-toolbar-title { margin: 0; font-size: 1.1rem; flex: 1 1 auto; text-align: center; }
+.print-asistente { display: flex; flex-direction: column; gap: 16px; }
+.print-opciones { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.print-opcion {
+  display: flex; flex-direction: column; gap: 8px; text-align: left;
+  padding: 16px; border: 1px solid var(--opr-border-strong); border-radius: 10px;
+  background: var(--opr-surface); color: var(--opr-text); cursor: pointer;
+}
+.print-opcion:hover { border-color: var(--opr-accent); }
+.print-opcion strong { font-size: 1.05rem; }
+.print-opcion span { color: var(--opr-muted); font-size: 0.92rem; line-height: 1.4; }
+
+/* Modo libro: tarjetas grandes con la misma piel visual que la carta de
+   unidad, pero sin alto fijo para poder llevar el texto completo. */
+.print-libro { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.print-unidad { display: contents; }
+@media screen {
+  .print-libro {
+    width: 210mm; max-width: 100%; margin: 0 auto; padding: 10mm; box-sizing: border-box;
+    background: #fff; color: #111; border: 1px solid #d4d4d4; border-radius: 2px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.12);
+  }
+}
+.print-faccion-titulo {
+  width: min(100%, 190mm); padding: 4mm 0 2mm; border-bottom: 0.5mm solid var(--opr-border-strong);
+  margin-bottom: 2mm; color: #111;
+}
+.print-faccion-titulo h1 { margin: 0; font-size: 8mm; line-height: 1; letter-spacing: 0.02em; }
+.print-faccion-bloque { margin-top: 4mm; }
+.print-faccion-bloque h2 { margin: 0; font-size: 5.5mm; line-height: 1.1; }
+.print-ejercito-subtitulo { margin: 1.5mm 0 0; font-size: 4.5mm; font-weight: 600; }
+.print-ejercito-resumen { margin: 1.5mm 0 0; font-size: 3.4mm; }
+.print-faccion-cover {
+  width: 100%; max-height: 82mm; object-fit: cover; object-position: center;
+  margin-top: 4mm; border: 0.5mm solid #000; border-radius: 2mm;
+}
+.print-faccion-lore-pagina { width: min(100%, 190mm); margin-bottom: 2mm; }
+.print-faccion-lore { margin: 4mm 0 0; color: #111; font-size: 3.2mm; line-height: 1.35; }
+.print-faccion-unidad { display: grid; justify-items: center; gap: 2mm; }
+.print-faccion-extra { width: min(100%, 190mm); margin: 0 auto 8mm; break-inside: avoid; }
+.print-faccion-extra h2 {
+  margin: 0 0 3mm; font-family: "Saira Condensed", sans-serif;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.print-card-grid {
+  display: grid; gap: 4mm; grid-template-columns: repeat(auto-fill, calc(var(--scard-w) * var(--scard-esc)));
+  align-items: start;
+}
+.print-lore-opciones { display: flex; gap: 16px; flex-wrap: wrap; margin: 8px 0; }
+@media print {
+  .print-toolbar, .print-lore-opciones { display: none !important; }
+  .print-vista { max-width: none; padding: 0; margin: 0; background: #fff; }
+  .print-libro { display: block; }
+  .print-faccion-titulo { width: 190mm; border-color: #000; color: #000; break-after: avoid; }
+  /* Con portada, el nombre y la imagen ocupan su propia pagina en vez de ir
+     pegados a lo que venga despues (lore o unidades). */
+  .print-faccion-titulo.print-faccion-portada { break-after: page; page-break-after: always; }
+  /* El lore, si se incluye, siempre acaba su propia tanda de paginas: lo que
+     sigue son las unidades, no mas trasfondo. */
+  .print-faccion-lore-pagina { width: 190mm; break-after: page; page-break-after: always; }
+  .print-faccion-lore { color: #000; }
+  .print-faccion-unidad { display: block; break-inside: avoid; margin: 0 0 8mm; }
+  .print-faccion-extra { width: 190mm; }
+}
+
+.libro-ficha {
+  width: min(100%, 190mm); height: auto; min-height: 0; transform: none;
+  display: flex; flex-direction: column; overflow: visible;
+  padding-bottom: 2.6mm; box-shadow: var(--opr-raise);
+}
+.libro-cab { align-items: stretch; flex-wrap: wrap; }
+.libro-nombre { min-width: 0; flex: 1 1 80mm; white-space: normal; }
+.libro-parte {
+  margin-left: 1.8mm; padding: 0.3mm 1.2mm; border: 0.3mm solid currentColor;
+  font-size: 0.72em; vertical-align: middle;
+}
+.libro-aviso { margin: 1.8mm 2.5mm 0; color: var(--ucard-tenue); font-size: 2.45mm; font-style: italic; }
+.libro-cuerpo { gap: 2.2mm; padding: 2.2mm 2.5mm 0; }
+.libro-cab .libro-avatar { align-self: stretch; }
+.libro-ficha.con-miniatura .libro-cab { align-items: flex-end; min-height: 33mm; padding-top: 2mm; }
+.libro-ficha.con-miniatura .libro-nombre { min-height: 12mm; }
+.libro-ficha.con-miniatura .libro-miniatura {
+  position: absolute; top: 0; left: 50%; height: 40mm; max-height: none; object-fit: cover;
+  border: 0; border-radius: 0; box-shadow: none; object-position: top;
+}
+.libro-ficha.con-miniatura .libro-stats {
+  align-self: flex-end; width: auto; flex-wrap: nowrap; justify-content: flex-end;
+}
+.libro-lore {
+  margin: 0; padding: 1.6mm 2mm; color: var(--ucard-tenue);
+  width: 50%;
+  border-left: 0.6mm solid var(--ucard-realce); background: color-mix(in srgb, var(--ucard-realce) 10%, transparent);
+  font-size: 2.75mm; line-height: 1.28;
+}
+.libro-lore h2, .libro-lore h3, .libro-lore h4 { font-size: 1.08em; }
+.libro-lore p, .libro-lore ul, .libro-lore ol { margin-bottom: 0.55em; }
+.libro-bloque { padding: 0; margin: 0; }
+.libro-tabla { width: 100%; table-layout: auto; font-size: 2.65mm; line-height: 1.28; }
+.libro-tabla th, .libro-tabla td { text-align: left; vertical-align: top; }
+/* `width: 1%` es el truco clasico para que una columna de tabla se encoja a
+   lo que ocupa su contenido: las demas se reparten el resto. Con
+   `white-space: nowrap` el nombre del arma o del objeto no se parte solo. */
+.libro-col-nombre { width: 1%; white-space: nowrap; font-weight: 600; }
+.libro-col-reglas { width: auto; }
+.libro-regla { margin: 0 0 1mm; }
+.libro-regla:last-child { margin-bottom: 0; }
+.libro-notas { margin-top: 0; }
+.libro-ficha-opciones { margin-top: 2mm; margin-left: 8mm; width: min(calc(100% - 8mm), 182mm); }
+.libro-opciones-separador { margin: 0 1.5mm; color: var(--ucard-tenue); }
+.libro-opciones-meta {
+  display: flex; gap: 2mm; flex-wrap: wrap; margin: 0; color: var(--ucard-tenue);
+  font-size: 2.5mm; font-weight: 600;
+}
+.libro-opciones-meta span { padding: 0.3mm 1.2mm; border: 0.3mm solid var(--ucard-filete); border-radius: 999px; }
+@media print {
+  .libro-ficha {
+    width: 190mm; margin: 0 0 2mm; box-shadow: none;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .libro-ficha-opciones { width: 182mm; margin-left: 8mm; }
+  .libro-tabla tr { break-inside: avoid; }
+}
+
+/* Modo tarjetas: un mazo por tipo de carta, en hojas de anverso seguidas de
+   su reverso con las columnas invertidas. `--print-cols` la fija cada grid
+   segun cuantas caben, y el reverso reutiliza la misma anchura de columna. */
+.print-mazo + .print-mazo { margin-top: 32px; }
+.print-mazo-title { margin: 0 0 12px; }
+.print-hoja {
+  display: grid; justify-content: center; gap: 4mm;
+  margin-bottom: 14px; padding: 8px; border: 1px solid var(--opr-border-strong); border-radius: 8px;
+}
+/* Las columnas de cada grid las fija en linea VistaTarjetas, calculadas con
+   cuadriculaPorHoja: dependen del tamano de carta, no son fijas aqui. */
+/* Sin depender de fondos: muchas impresoras y navegadores no imprimen los
+   "graficos de fondo" salvo que se marquen a mano, asi que el dorso se dibuja
+   solo con bordes y texto —trazo, no relleno—, que siempre sale en papel. */
+.print-dorso { position: relative; border-radius: 2.5mm; border: 0.6mm solid var(--opr-border-strong); }
+.print-dorso::before {
+  content: ""; position: absolute; inset: 3mm;
+  border: 0.35mm solid var(--opr-border-strong); border-radius: 1.5mm;
+}
+.print-dorso::after {
+  content: "✦"; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7mm; color: var(--opr-border-strong);
+}
+.print-dorso-tarot { width: calc(var(--ucard-w) * var(--ucard-esc)); height: calc(var(--ucard-h) * var(--ucard-esc)); }
+.print-dorso-scard { width: calc(var(--scard-w) * var(--scard-esc)); height: calc(var(--scard-h) * var(--scard-esc)); }
+.print-dorso-vacio { visibility: hidden; }
+@media print {
+  :root { --ucard-esc: 1; --scard-esc: 1; }
+  .print-hoja { border: 0; break-after: page; padding: 0; margin: 0; }
+  .print-dorso { border-color: #000; }
+  /* En la seccion entera, no solo en las hojas: `page` se hereda, y puesto
+     solo en las hojas el titulo se queda en la pagina por defecto —vertical—
+     y mete una hoja en blanco antes de que empiece lo apaisado. */
+  .print-mazo-apaisado { page: tarot; }
+}
+
+/* En edicion la carta no imprime, asi que crece: mismo ancho, mas alto para
+   que quepan los campos y los botones sin que el texto se apelmace. */
+:root { --scard-h-editando: 100mm; }
+
+.scard-title-input, .scard-valor-input, .scard-efecto-input {
+  font-family: inherit; color: inherit;
+  background: transparent; border: 0.3mm solid var(--ucard-filete); border-radius: 0.5mm;
+}
+.scard-title-input {
+  flex: 1; min-width: 0; padding: 0.8mm 1.3mm;
+  font-family: "Saira Condensed", sans-serif;
+  font-weight: 700; font-size: 2.625mm;
+  background: var(--ucard-papel); color: var(--ucard-tinta);
+}
+.scard-valor-input {
+  flex: 0 0 auto; width: 11.25mm; padding: 0.7mm 0.5mm;
+  font-size: 3mm; text-align: center;
+  background: var(--ucard-papel); color: var(--ucard-tinta);
+}
+.scard-efecto-input {
+  width: 100%; min-height: calc(var(--scard-h) * 0.4); padding: 0.8mm 1.1mm;
+  font-size: 2.73mm; line-height: 1.32; resize: vertical;
+}
+
+.scard-mision-acciones { display: flex; align-items: center; gap: 1.2mm; flex-wrap: wrap; }
+
+/* El pie de lectura es una sola linea de tipografia de carta, no botones de
+   interfaz: el estado a la izquierda, los enlaces a la derecha, todo con la
+   misma voz apagada que ya usa la tirada del hechizo. */
+.scard-mision-pie { display: flex; align-items: baseline; justify-content: space-between; gap: 1.2mm; width: 100%; }
+.scard-mision-links { display: flex; align-items: baseline; gap: 1.2mm; flex-wrap: wrap; }
+.scard-mision-link {
+  font: inherit; font-style: italic; color: var(--ucard-tenue);
+  background: none; border: 0; padding: 0; margin: 0; cursor: pointer;
+  text-decoration: underline dotted; text-underline-offset: 0.3mm;
+}
+.scard-mision-link:hover { color: var(--ucard-tinta); }

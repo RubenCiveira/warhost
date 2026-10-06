@@ -21,7 +21,7 @@ const filas = (tabla, queries) =>
 
 const dir = await mkdtemp(join(tmpdir(), "warhost-fac-"));
 const salida = join(dir, "faccion.mjs");
-await build({ entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/faccion.js"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["src/modules/opr-kit/core/faccion.ts"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const F = await import(salida);
 
 const libro = JSON.parse(

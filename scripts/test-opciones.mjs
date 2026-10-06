@@ -9,6 +9,7 @@
  *   pnpm test:opciones [nLibros]
  */
 import { build } from "esbuild";
+import { ALIAS_OPR_KIT } from "./alias-opr-kit.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -35,6 +36,7 @@ const paquetes = libros.flatMap((libro) =>
 const dir = await mkdtemp(join(tmpdir(), "warhost-opciones-"));
 const bundle = join(dir, "opciones.cjs");
 await build({
+  alias: ALIAS_OPR_KIT,
   stdin: {
     contents: `
       const { desglosarOpcion } = require("@rubenciveira/opr-kit/core/opciones");

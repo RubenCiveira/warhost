@@ -5,13 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:local": "pnpm -C ../opr-kit build && pnpm kit:local && vite",
-    "dev:repository": "pnpm kit:npm && vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
-    "kit:local": "test -f ../opr-kit/dist/styles.css || { echo 'Falta ../opr-kit compilado: cd ../opr-kit && pnpm install && pnpm build'; exit 1; } && rm -rf node_modules/@rubenciveira/opr-kit && ln -s ../../../opr-kit node_modules/@rubenciveira/opr-kit && echo 'opr-kit: usando ../opr-kit'",
-    "kit:npm": "rm -rf node_modules/@rubenciveira/opr-kit && pnpm install && echo 'opr-kit: usando la version publicada'",
     "test:maps": "node src/modules/examples/debug/tests/test-maps.mjs",
     "test:maps:ui": "node src/modules/examples/debug/tests/test-maps-ui.mjs",
     "test:import": "node scripts/test-import.mjs",
@@ -43,7 +39,6 @@
     "test:misiones": "node scripts/test-misiones.mjs"
   },
   "dependencies": {
-    "@rubenciveira/opr-kit": "^0.2.0",
     "appwrite": "^27.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

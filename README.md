@@ -55,7 +55,7 @@ pnpm test:edit       # compone, guarda, rehidrata y modifica un ejercito
 ```
 
 Ninguna de las dos necesita navegador: ejecutan los modulos que se despliegan
-(`armyForgeResolve` y `builder` de `@rubenciveira/opr-kit`), que estan separados de la
+(`armyForgeResolve` y `builder` de `src/modules/opr-kit/core`), que estan separados de la
 capa de red justamente para poder ejercitarlos desde Node. `test:builder` lee de
 Appwrite con la CLI, que toma el proyecto del repo del backend; si lo tienes en
 otro sitio, pasale `APPWRITE_DIR`.
@@ -69,48 +69,29 @@ src/
   context/     sesion (AuthContext) y modo de juego elegido (GameSystemContext)
   components/  Layout, puerta de acceso y piezas reutilizables
   pages/       una carpeta por area funcional
+  modules/opr-kit/  logica de ejercitos, cartas e impresion, lista para volver a ser paquete
 ```
 
 Las vistas nunca hablan con el SDK directamente: todo pasa por `src/api`, que es
 donde viven los ids de tabla, las consultas y los permisos de fila.
 
 La logica de ejercitos (constructor, reglas, importacion de Army Forge) y las
-cartas y vistas de impresion viven aparte, en
-[`@rubenciveira/opr-kit`](https://github.com/RubenCiveira/opr-kit), para poder
-reutilizarlas en otras aplicaciones. Sus tipos (`core/model`) solo declaran los
-campos que se leen: las filas de Appwrite encajan tal cual, salvo `ArmyBook` y
-`HeroClass`, cuyo `id` neutro rellenan `src/api/catalog.ts` y
-`src/api/content.ts` a partir del `$id`.
+cartas y vistas de impresion viven en `src/modules/opr-kit/`, separadas del
+resto para poder sacarlas como paquete
+([opr-kit](https://github.com/RubenCiveira/opr-kit)) cuando haga falta. Por eso
+no pueden importar nada de fuera de su carpeta, y el resto de la app las
+importa con su nombre de paquete, `@rubenciveira/opr-kit/core/...` y
+`.../react/...`: un alias en `vite.config.ts`, `tsconfig.app.json` y
+`scripts/alias-opr-kit.mjs` lo resuelve a la carpeta. Para volver a sacarlo
+basta con quitar esos tres alias e instalar el paquete.
 
-Su CSS se importa en `src/main.tsx` antes que `styles.css`, y las variables
+Sus tipos (`core/model`) solo declaran los campos que se leen: las filas de
+Appwrite encajan tal cual, salvo `ArmyBook` y `HeroClass`, cuyo `id` neutro
+rellenan `src/api/catalog.ts` y `src/api/content.ts` a partir del `$id`. Su
+CSS se importa en `src/main.tsx` antes que `styles.css`, y las variables
 `--opr-*` del tema de las cartas se enlazan con las de la ambientacion al
-principio de `styles.css`. Las imagenes no las busca el paquete: las resuelve
+principio de `styles.css`. Las imagenes no las busca el modulo: las resuelve
 quien pinta la vista (`avatarDe`, `miniaturaDe`, `coverUrl`).
-
-No hace falta publicar el paquete para probar un cambio aqui: basta con
-publicarlo cuando el despliegue, que instala desde npm, tenga que llevarlo.
-Para usar tu copia local, clonala al lado y enlazala:
-
-```bash
-git clone https://github.com/RubenCiveira/opr-kit ../opr-kit
-(cd ../opr-kit && pnpm install)
-pnpm dev:local        # compila ../opr-kit, lo enlaza y arranca Vite
-pnpm dev:repository   # vuelve a la version publicada y arranca Vite
-```
-
-`dev:local` compila el paquete una vez al arrancar. Si vas a tocarlo mientras
-Warhost corre, deja `pnpm build --watch` abierto en `../opr-kit` y Vite recarga
-al guardar. Sin arrancar el servidor, `pnpm kit:local` y `pnpm kit:npm` solo
-cambian el enlace.
-
-`kit:local` solo cambia el enlace dentro de `node_modules`: no toca
-`package.json` ni el lockfile, asi que no hay nada que no subir. Cualquier
-`pnpm install` o `pnpm add` lo deshace y vuelve a la version publicada; basta
-con repetir `pnpm kit:local`.
-
-Enlazado, el paquete veria su propia copia de React y dos copias rompen los
-hooks: por eso `vite.config.ts` tiene `resolve.dedupe` y los scripts que pintan
-componentes usan el alias de `scripts/react-unico.mjs`.
 
 ## Acceso
 

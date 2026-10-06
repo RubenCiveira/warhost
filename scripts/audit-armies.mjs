@@ -23,7 +23,7 @@ const filas = (tabla, queries) =>
 
 const dir = await mkdtemp(join(tmpdir(), "warhost-audit-"));
 const salida = join(dir, "builder.mjs");
-await build({ entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/builder.js"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["src/modules/opr-kit/core/builder.ts"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const B = await import(salida);
 
 const ejercitos = filas("armies", [{ method: "limit", values: [100] }]);

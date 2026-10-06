@@ -15,6 +15,7 @@
  *   node scripts/informe-opciones.mjs > ../warhost-appwrite/ARMY-FORGE-DATA-ISSUES.md
  */
 import { build } from "esbuild";
+import { ALIAS_OPR_KIT } from "./alias-opr-kit.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -32,6 +33,7 @@ const filas = (tabla, queries) =>
 const dir = await mkdtemp(join(tmpdir(), "warhost-audit-op-"));
 const salida = join(dir, "lib.mjs");
 await build({
+  alias: ALIAS_OPR_KIT,
   stdin: {
     contents: `export { parseSections, sectionsForUnit } from "@rubenciveira/opr-kit/core/builder";
                export { baseLoadout } from "@rubenciveira/opr-kit/core/loadout";`,

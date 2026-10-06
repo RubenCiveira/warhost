@@ -16,7 +16,7 @@ const CLI_CWD = process.env.APPWRITE_DIR ?? "../warhost-appwrite";
 
 const dir = await mkdtemp(join(tmpdir(), "warhost-"));
 const outfile = join(dir, "builder.mjs");
-await build({ entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/builder.js"], outfile, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["src/modules/opr-kit/core/builder.ts"], outfile, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const B = await import(outfile);
 
 const units = rows("army_units", [{ method: "equal", attribute: "bookKey", values: [BOOK] }, { method: "orderAsc", attribute: "sortOrder" }]);

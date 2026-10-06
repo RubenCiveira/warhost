@@ -21,8 +21,8 @@ const carga = async (entrada, nombre) => {
   await build({ entryPoints: [entrada], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
   return import(salida);
 };
-const L = await carga("node_modules/@rubenciveira/opr-kit/dist/core/loadout.js", "loadout.mjs");
-const B = await carga("node_modules/@rubenciveira/opr-kit/dist/core/builder.js", "builder.mjs");
+const L = await carga("src/modules/opr-kit/core/loadout.ts", "loadout.mjs");
+const B = await carga("src/modules/opr-kit/core/builder.ts", "builder.mjs");
 
 const filas = (tabla, queries) =>
   JSON.parse(execFileSync("appwrite", ["tables-db", "list-rows", "--database-id", "warhost", "--table-id", tabla, "--json",
@@ -124,7 +124,7 @@ comprobar(conNota[0]?.notes === "va con el capitan", "y las notas tambien");
 // Y llega entera a la vista del ejercito, que no lee las elecciones sino las
 // unidades ya resueltas del JSON guardado.
 {
-  const { parseStoredList } = await carga("node_modules/@rubenciveira/opr-kit/dist/core/armyForgeResolve.js", "resolve.mjs");
+  const { parseStoredList } = await carga("src/modules/opr-kit/core/armyForgeResolve.ts", "resolve.mjs");
   const conNotas = { key: "r", unit: pathfinders, choices, combined: true, notes: "flanco derecho" };
   const guardadas = JSON.stringify({ units: [B.toResolvedUnit(conNotas, secciones, 0)] });
   const leidas = parseStoredList(guardadas);

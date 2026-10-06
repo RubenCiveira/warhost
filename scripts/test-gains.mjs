@@ -4,6 +4,7 @@
  *   pnpm test:gains
  */
 import { build } from "esbuild";
+import { ALIAS_OPR_KIT } from "./alias-opr-kit.mjs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -11,6 +12,7 @@ import { join } from "node:path";
 const dir = await mkdtemp(join(tmpdir(), "warhost-gains-"));
 const outfile = join(dir, "gains.mjs");
 await build({
+  alias: ALIAS_OPR_KIT,
   stdin: {
     contents: `
       export { ruleLabelsFromGains } from "@rubenciveira/opr-kit/core/armyForgeGains";

@@ -15,7 +15,7 @@ import { join } from "node:path";
 
 const dir = await mkdtemp(join(tmpdir(), "warhost-loadout-"));
 const outfile = join(dir, "loadout.mjs");
-await build({ entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/loadout.js"], outfile, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["src/modules/opr-kit/core/loadout.ts"], outfile, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const { applyOptions } = await import(outfile);
 
 let fallos = 0;

@@ -23,7 +23,7 @@ const filas = (tabla, queries) =>
 
 const dir = await mkdtemp(join(tmpdir(), "warhost-uni-"));
 const salida = join(dir, "unidades.mjs");
-await build({ entryPoints: ["node_modules/@rubenciveira/opr-kit/dist/core/unidades.js"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["src/modules/opr-kit/core/unidades.ts"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const { grupoDeUnidad, agruparUnidades, emparejarHeroes } = await import(salida);
 
 let fallos = 0;
