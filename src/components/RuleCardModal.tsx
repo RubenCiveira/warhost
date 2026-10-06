@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import RuleCard from "./RuleCard";
+import RuleCard from "@rubenciveira/opr-kit/react/RuleCard";
 import type { CatalogRule } from "../api/catalog";
 import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 

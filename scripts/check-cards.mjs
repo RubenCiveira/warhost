@@ -67,8 +67,8 @@ await build({
   stdin: {
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
-      import UnitCard from "./src/components/UnitCard";
-      import SpellCard from "./src/components/SpellCard";
+      import UnitCard from "@rubenciveira/opr-kit/react/UnitCard";
+      import SpellCard from "@rubenciveira/opr-kit/react/SpellCard";
       import { baseLoadout } from "@rubenciveira/opr-kit/core/loadout";
       import { parseSpells } from "@rubenciveira/opr-kit/core/spells";
       import { parseSections, sectionsForUnit } from "@rubenciveira/opr-kit/core/builder";

@@ -29,7 +29,7 @@ await build({
   stdin: {
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
-      import UnitCard from "./src/components/UnitCard";
+      import UnitCard from "@rubenciveira/opr-kit/react/UnitCard";
       import { baseLoadout } from "@rubenciveira/opr-kit/core/loadout";
       import { parseSections, sectionsForUnit } from "@rubenciveira/opr-kit/core/builder";
       const UNITS = ${JSON.stringify(unidades)};

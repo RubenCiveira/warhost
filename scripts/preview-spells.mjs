@@ -28,7 +28,7 @@ await build({
   stdin: {
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
-      import SpellCard from "./src/components/SpellCard";
+      import SpellCard from "@rubenciveira/opr-kit/react/SpellCard";
       import { parseSpells } from "@rubenciveira/opr-kit/core/spells";
       const SPELLS = parseSpells(${JSON.stringify(libro.spells)});
       globalThis.__HTML__ = SPELLS.map((s) =>

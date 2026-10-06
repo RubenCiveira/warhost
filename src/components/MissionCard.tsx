@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Mission } from "../lib/types";
-import { densidadScard } from "../lib/cardDensity";
+import { densidadScard } from "@rubenciveira/opr-kit/react/cardDensity";
 
 /**
  * Una mision en carta Mini Euro, la misma piel que un hechizo o una regla:

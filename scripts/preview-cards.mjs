@@ -51,8 +51,8 @@ await build({
   stdin: {
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
-      import UnitCard from "./src/components/UnitCard";
-      import RuleCard from "./src/components/RuleCard";
+      import UnitCard from "@rubenciveira/opr-kit/react/UnitCard";
+      import RuleCard from "@rubenciveira/opr-kit/react/RuleCard";
       import { baseLoadout } from "@rubenciveira/opr-kit/core/loadout";
       import { parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
       const UNITS = ${JSON.stringify(elegidas)};

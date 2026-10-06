@@ -26,10 +26,10 @@ import { errorMessage } from "../lib/format";
 import type { HeroClass, QuestShopPackage } from "../lib/types";
 import type { HeroSkill } from "@rubenciveira/opr-kit/core/model";
 import { ErrorBanner, Spinner } from "./ui";
-import UnitCard from "./UnitCard";
+import UnitCard from "@rubenciveira/opr-kit/react/UnitCard";
 import RuleCardModal from "./RuleCardModal";
-import HeroSkillCard from "./HeroSkillCard";
-import type { HeroSkillCardData } from "./HeroSkillCard";
+import HeroSkillCard from "@rubenciveira/opr-kit/react/HeroSkillCard";
+import type { HeroSkillCardData } from "@rubenciveira/opr-kit/react/HeroSkillCard";
 import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 
 type Paso = "elegir" | "configurar" | "revisar";

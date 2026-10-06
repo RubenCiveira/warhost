@@ -4,13 +4,16 @@ import type { GameSystemId, Setting } from "@rubenciveira/opr-kit/core/gameSyste
 import type { Row } from "../lib/types";
 import { parseSections } from "@rubenciveira/opr-kit/core/builder";
 import type { UpgradeSection } from "@rubenciveira/opr-kit/core/builder";
+import type {
+  ArmyBook as CoreArmyBook,
+  ArmyUnit as CoreArmyUnit,
+  CatalogRule as CoreCatalogRule,
+} from "@rubenciveira/opr-kit/core/model";
 
-export interface ArmyBook extends Row {
+export interface ArmyBook extends Row, CoreArmyBook {
   uid: string;
   gameSystem: GameSystemId;
   setting: Setting;
-  name: string;
-  factionName: string | null;
   factionId: string | null;
   official: boolean;
   versionString: string | null;
@@ -19,31 +22,14 @@ export interface ArmyBook extends Row {
   coverImagePath: string | null;
   bannerImagePath: string | null;
   popularity: number;
-  spells: string | null;
-  lore: string | null;
   loreSyncedAt: string | null;
   syncedAt: string | null;
   syncedVersion: string | null;
-  /** Reglas que publica este libro; el glosario es comun y no lo dice. */
-  ruleNames: string[];
 }
 
-export interface ArmyUnit extends Row {
-  bookKey: string;
+export interface ArmyUnit extends Row, CoreArmyUnit {
   bookUid: string;
   gameSystem: GameSystemId;
-  unitId: string;
-  name: string;
-  size: number;
-  quality: number;
-  defense: number;
-  cost: number;
-  rules: string[];
-  weapons: string | null;
-  items: string | null;
-  upgradePackageUids: string[];
-  sortOrder: number;
-  lore: string | null;
 }
 
 export interface UpgradePackageRow extends Row {
@@ -87,15 +73,16 @@ export async function listBooks(gameSystem: GameSystemId): Promise<ArmyBook[]> {
     tableId: TABLES.armyBooks,
     queries: [Query.equal("gameSystem", gameSystem), Query.orderAsc("name"), Query.limit(200)],
   });
-  return result.rows;
+  return result.rows.map(libroConId);
 }
 
 export async function getBook(bookKey: string): Promise<ArmyBook> {
-  return tables.getRow<ArmyBook>({
+  const row = await tables.getRow<ArmyBook>({
     databaseId: env.databaseId,
     tableId: TABLES.armyBooks,
     rowId: bookKey,
   });
+  return libroConId(row);
 }
 
 /**
@@ -110,7 +97,13 @@ export async function getBookByUid(uid: string, gameSystem: GameSystemId): Promi
     tableId: TABLES.armyBooks,
     queries: [Query.equal("uid", uid), Query.equal("gameSystem", gameSystem), Query.limit(1)],
   });
-  return result.rows[0] ?? null;
+  const row = result.rows[0];
+  return row ? libroConId(row) : null;
+}
+
+/** El `id` neutro que lee `@rubenciveira/opr-kit`: el de la fila de Appwrite. */
+function libroConId(row: ArmyBook): ArmyBook {
+  return { ...row, id: row.$id };
 }
 
 export async function listUnits(bookKey: string): Promise<ArmyUnit[]> {
@@ -279,17 +272,10 @@ export function pickImageByType(images: CatalogImage[] | undefined, imageType: C
   return pickCover(images?.filter((image) => (image.imageType ?? "gallery") === imageType));
 }
 
-export interface CatalogRule extends Row {
-  name: string;
+export interface CatalogRule extends Row, CoreCatalogRule {
   gameSystem: GameSystemId;
   setting: Setting;
-  description: string;
   hasRating: boolean;
-  /**
-   * Marcado en las reglas del reglamento —AP, Ambush, Deadly— y nulo en las que
-   * publica la faccion. Es lo que separa "las reglas de esta faccion" del resto.
-   */
-  coreType: number | null;
   /** 1 en reglas de unidad, 2 en reglas de arma. */
   targetType: number | null;
   sourceBook: string | null;

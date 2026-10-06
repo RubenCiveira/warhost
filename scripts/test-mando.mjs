@@ -19,7 +19,7 @@ await build({
   stdin: {
     contents: `
       import { createRoot } from "react-dom/client";
-      import UnitCard from "./src/components/UnitCard";
+      import UnitCard from "@rubenciveira/opr-kit/react/UnitCard";
 
       const GLOSARIO = new Map([
         ["bane in melee aura", { description: "This model and its unit get Bane in melee." }],

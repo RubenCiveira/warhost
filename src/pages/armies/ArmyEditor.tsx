@@ -30,9 +30,9 @@ import type { HeroSkill } from "@rubenciveira/opr-kit/core/model";
 import { parseHeroSkills } from "@rubenciveira/opr-kit/core/model";
 import { errorMessage, formatDateTime } from "../../lib/format";
 import { EmptyState, ErrorBanner, Spinner } from "../../components/ui";
-import UnitCard from "../../components/UnitCard";
-import HeroSkillCard from "../../components/HeroSkillCard";
-import type { HeroSkillCardData } from "../../components/HeroSkillCard";
+import UnitCard from "@rubenciveira/opr-kit/react/UnitCard";
+import HeroSkillCard from "@rubenciveira/opr-kit/react/HeroSkillCard";
+import type { HeroSkillCardData } from "@rubenciveira/opr-kit/react/HeroSkillCard";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import AddUnitWizard from "../../components/AddUnitWizard";
 import { buildArmy, entriesFromForgeList, esHeroe, rehydrateEntries, serializeEntries } from "@rubenciveira/opr-kit/core/builder";
@@ -40,12 +40,12 @@ import type { StoredEntry } from "@rubenciveira/opr-kit/core/builder";
 import type { BuilderEntry, UpgradeSection } from "@rubenciveira/opr-kit/core/builder";
 import { catalogImageUrl, getBook, getBookByUid, groupImages, listBookImages, listBooks, listRuleGlossary, pickImageByType, targetKeyFor } from "../../api/catalog";
 import type { ArmyBook, ArmyUnit, CatalogImage, CatalogRule } from "../../api/catalog";
-import SpellCard from "../../components/SpellCard";
+import SpellCard from "@rubenciveira/opr-kit/react/SpellCard";
 import RuleCardModal from "../../components/RuleCardModal";
 import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 import { parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
-import RuleCard from "../../components/RuleCard";
-import ArmyPrintView from "../../components/ArmyPrintView";
+import RuleCard from "@rubenciveira/opr-kit/react/RuleCard";
+import ArmyPrintView from "@rubenciveira/opr-kit/react/ArmyPrintView";
 import AvisoComposicion from "../../components/AvisoComposicion";
 import {
   equipoDeEjercito,

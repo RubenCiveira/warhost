@@ -12,6 +12,7 @@ import {
   listUnits,
   listUpgradePackages,
   listRuleGlossary,
+  pickCover,
   pickImageByType,
   setPrimaryImage,
   targetKeyFor,
@@ -23,16 +24,16 @@ import { errorMessage } from "../../lib/format";
 import { EmptyState, ErrorBanner, PageHead, Spinner } from "../../components/ui";
 import ImageUploader from "../../components/ImageUploader";
 import WarhubPicker from "../../components/WarhubPicker";
-import FactionPrintView from "../../components/FactionPrintView";
-import UnitCard from "../../components/UnitCard";
-import LoreText from "../../components/LoreText";
+import FactionPrintView from "@rubenciveira/opr-kit/react/FactionPrintView";
+import UnitCard from "@rubenciveira/opr-kit/react/UnitCard";
+import LoreText from "@rubenciveira/opr-kit/react/LoreText";
 import { sectionsForUnit } from "@rubenciveira/opr-kit/core/builder";
 import { baseLoadout } from "@rubenciveira/opr-kit/core/loadout";
-import SpellCard from "../../components/SpellCard";
+import SpellCard from "@rubenciveira/opr-kit/react/SpellCard";
 import RuleCardModal from "../../components/RuleCardModal";
 import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 import { parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
-import RuleCard from "../../components/RuleCard";
+import RuleCard from "@rubenciveira/opr-kit/react/RuleCard";
 import { equipoDeFaccion, habilidadesDeFaccion, reglasGeneralesDeFaccion } from "@rubenciveira/opr-kit/core/faccion";
 import { agruparUnidades } from "@rubenciveira/opr-kit/core/unidades";
 import Tabs from "../../components/Tabs";
@@ -315,11 +316,16 @@ export default function CatalogBook() {
   }
 
   if (imprimir) {
+    const portada = pickCover(byTarget.get(targetKeyFor(book.$id))?.filter((image) => (image.imageType ?? "gallery") === "gallery"));
     return (
       <FactionPrintView
         book={book}
         units={units}
-        images={images}
+        coverUrl={portada ? catalogImageUrl(portada.fileId) : book.coverImagePath}
+        miniaturaDe={(unit) => {
+          const miniatura = pickImageByType(byTarget.get(targetKeyFor(book.$id, unit.unitId)), "miniature");
+          return miniatura ? catalogImageUrl(miniatura.fileId) : null;
+        }}
         packages={packages}
         glosario={glosario}
         onCerrar={() => setImprimir(false)}

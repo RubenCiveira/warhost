@@ -22,7 +22,7 @@ await build({
     contents: `
       import { useState } from "react";
       import { createRoot } from "react-dom/client";
-      import UnitCard from "./src/components/UnitCard";
+      import UnitCard from "@rubenciveira/opr-kit/react/UnitCard";
       import RuleCardModal from "./src/components/RuleCardModal";
 
       const GLOSARIO = new Map([

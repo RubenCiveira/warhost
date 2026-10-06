@@ -28,7 +28,7 @@ import { composeArmyPayload } from "../../lib/armyPayload";
 import { errorMessage } from "../../lib/format";
 import { armyNounFor, getGameSystem } from "@rubenciveira/opr-kit/core/gameSystems";
 import { EmptyState, ErrorBanner, Spinner } from "../../components/ui";
-import UnitCard from "../../components/UnitCard";
+import UnitCard from "@rubenciveira/opr-kit/react/UnitCard";
 import RuleCardModal from "../../components/RuleCardModal";
 import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
 
