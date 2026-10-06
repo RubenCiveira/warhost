@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ArmyBook, CatalogRule } from "../core/model";
 import type { ResolvedUnit } from "../core/armyForgeResolve";
 import { equipoDeEjercito, reglasUsadasEnEjercito, tieneCaster } from "../core/faccion";
@@ -21,6 +21,7 @@ import SpellCard from "./SpellCard";
 import UnitCard from "./UnitCard";
 import LoreText from "./LoreText";
 import { useTextos } from "./textos";
+import { descargarPdfLibro, descargarPdfTarjetas } from "./pdfImpresion";
 import type { Textos } from "./textos";
 
 /** Los mismos mm que fijan `--ucard-w/h` y `--scard-w/h` en styles.css: hay
@@ -672,7 +673,8 @@ function VistaTarjetas({
 /**
  * Asistente de impresion: primero se elige el modo, y solo entonces se
  * compone la hoja —construir los dos mazos por adelantado para una lista
- * grande es trabajo de sobra si al final no se usan.
+ * grande es trabajo de sobra si al final no se usan—. Con `modoInicial` se
+ * salta la eleccion y el PDF empieza a generarse nada mas abrir.
  */
 export default function ArmyPrintView({
   nombre,
@@ -684,6 +686,7 @@ export default function ArmyPrintView({
   librosConocidos,
   avatarDe,
   puedeLanzarHechizos,
+  modoInicial,
   onCerrar,
 }: {
   nombre: string;
@@ -696,23 +699,60 @@ export default function ArmyPrintView({
   librosConocidos: ArmyBook[];
   avatarDe?: (unit: ResolvedUnit) => string | null;
   puedeLanzarHechizos?: (unit: ResolvedUnit) => boolean;
+  /** Abre directamente en ese modo y descarga su PDF. */
+  modoInicial?: "libro" | "tarjetas";
   onCerrar: () => void;
 }) {
   const t = useTextos();
-  const [modo, setModo] = useState<"elegir" | "libro" | "tarjetas">("elegir");
+  const [modo, setModo] = useState<"elegir" | "libro" | "tarjetas">(modoInicial ?? "elegir");
   const filas = useMemo(() => emparejarHeroes(units, entradasAttachedTo), [units, entradasAttachedTo]);
   const cartas = useMemo(() => cartasDe(glosario, units, librosConocidos, puedeLanzarHechizos), [glosario, units, librosConocidos, puedeLanzarHechizos]);
+  const vistaRef = useRef<HTMLDivElement>(null);
+  const [progresoPdf, setProgresoPdf] = useState<{ hecha: number; total: number } | null>(null);
+  const [errorPdf, setErrorPdf] = useState(false);
+  // El estado no se actualiza a tiempo para frenar un segundo clic, ni el
+  // doble montaje de StrictMode: una ref si.
+  const generando = useRef(false);
+
+  const descargarPdf = async () => {
+    const contenedor = vistaRef.current;
+    if (!contenedor || modo === "elegir" || generando.current) return;
+    generando.current = true;
+    setErrorPdf(false);
+    const archivo = `${nombre || noun.singular} - ${modo === "libro" ? t.modoLibro : t.modoTarjetas}.pdf`;
+    const avanzar = (hecha: number, total: number) => setProgresoPdf({ hecha, total });
+    try {
+      await (modo === "libro" ? descargarPdfLibro : descargarPdfTarjetas)(contenedor, archivo, avanzar);
+    } catch (error) {
+      console.error(error);
+      setErrorPdf(true);
+    } finally {
+      generando.current = false;
+      setProgresoPdf(null);
+    }
+  };
+
+  const abiertoConModo = useRef(modoInicial !== undefined);
+  useEffect(() => {
+    if (!abiertoConModo.current) return;
+    abiertoConModo.current = false;
+    void descargarPdf();
+    // Solo al abrir: despues, el PDF se pide con el boton.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const volver = () => (modo === "elegir" || modoInicial ? onCerrar() : setModo("elegir"));
 
   return (
     <div className="print-vista">
       <div className="print-toolbar">
-        <button type="button" onClick={() => (modo === "elegir" ? onCerrar() : setModo("elegir"))}>
-          {modo === "elegir" ? t.cancelar : t.volverAElegir}
+        <button type="button" onClick={volver}>
+          {modo === "elegir" ? t.cancelar : modoInicial ? t.volver : t.volverAElegir}
         </button>
         <h2 className="print-toolbar-title">{t.imprimirTitulo(nombre || noun.singular)}</h2>
         {modo !== "elegir" ? (
-          <button type="button" className="primary" onClick={() => window.print()}>
-            {t.imprimir}
+          <button type="button" className="primary" onClick={() => void descargarPdf()} disabled={progresoPdf !== null}>
+            {progresoPdf ? t.generandoPdf(progresoPdf.hecha, progresoPdf.total) : t.descargarPdf}
           </button>
         ) : null}
       </div>
@@ -731,18 +771,30 @@ export default function ArmyPrintView({
             </button>
           </div>
         </div>
-      ) : modo === "libro" ? (
-        <VistaLibro
-          nombre={nombre}
-          units={units}
-          glosario={glosario}
-          librosConocidos={librosConocidos}
-          avatarDe={avatarDe}
-          puedeLanzarHechizos={puedeLanzarHechizos}
-          noun={noun}
-        />
       ) : (
-        <VistaTarjetas filas={filas} cartas={cartas} glosario={glosario} quest={quest} avatarDe={avatarDe} />
+        <>
+          <p className="muted print-pdf-aviso">{t.pdfTamanoReal}</p>
+          {errorPdf ? (
+            <p className="print-pdf-error" role="alert">
+              {t.errorPdf}
+            </p>
+          ) : null}
+          <div ref={vistaRef}>
+            {modo === "libro" ? (
+              <VistaLibro
+                nombre={nombre}
+                units={units}
+                glosario={glosario}
+                librosConocidos={librosConocidos}
+                avatarDe={avatarDe}
+                puedeLanzarHechizos={puedeLanzarHechizos}
+                noun={noun}
+              />
+            ) : (
+              <VistaTarjetas filas={filas} cartas={cartas} glosario={glosario} quest={quest} avatarDe={avatarDe} />
+            )}
+          </div>
+        </>
       )}
     </div>
   );

@@ -76,8 +76,13 @@ export interface Textos {
   // Impresion.
   imprimir: string;
   imprimirTitulo: (nombre: string) => string;
+  descargarPdf: string;
+  generandoPdf: (hecha: number, total: number) => string;
+  errorPdf: string;
+  pdfTamanoReal: string;
   cancelar: string;
   volverAElegir: string;
+  volver: string;
   eligeModo: (noun: ArmyNoun) => string;
   modoLibro: string;
   modoLibroAyuda: string;
@@ -155,8 +160,13 @@ export const es: Textos = {
   tirada: (umbral) => `Tira 1D6: iguala o supera ${umbral}`,
   imprimir: "Imprimir",
   imprimirTitulo: (nombre) => `Imprimir ${nombre}`,
+  descargarPdf: "Descargar PDF",
+  generandoPdf: (hecha, total) => `Generando PDF… ${hecha}/${total}`,
+  errorPdf: "No se pudo generar el PDF. Vuelve a intentarlo; si sigue fallando, usa Imprimir del navegador.",
+  pdfTamanoReal: "Imprime el PDF a tamaño real (100 %), sin «ajustar a la página»: así todo sale a su medida real.",
   cancelar: "Cancelar",
   volverAElegir: "← Volver a elegir",
+  volver: "← Volver",
   eligeModo: (noun) => `Elige como quieres imprimir las cartas de ${noun.demonstrative} ${noun.singular}.`,
   modoLibro: "Modo libro",
   modoLibroAyuda:
@@ -235,8 +245,13 @@ export const en: Textos = {
   tirada: (umbral) => `Roll 1D6: ${umbral}+`,
   imprimir: "Print",
   imprimirTitulo: (nombre) => `Print ${nombre}`,
+  descargarPdf: "Download PDF",
+  generandoPdf: (hecha, total) => `Generating PDF… ${hecha}/${total}`,
+  errorPdf: "The PDF could not be generated. Try again; if it keeps failing, use the browser's Print.",
+  pdfTamanoReal: "Print the PDF at actual size (100%), not \"fit to page\", so everything comes out at its real size.",
   cancelar: "Cancel",
   volverAElegir: "← Back",
+  volver: "← Back",
   eligeModo: (noun) => `Choose how to print the cards of this ${noun.singular}.`,
   modoLibro: "Book mode",
   modoLibroAyuda:

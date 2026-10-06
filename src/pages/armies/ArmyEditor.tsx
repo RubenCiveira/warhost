@@ -130,7 +130,8 @@ export default function ArmyEditor() {
   /** Borrador en curso de este ejercito, si lo hay. */
   const [draft, setDraft] = useState<Army | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [imprimiendo, setImprimiendo] = useState(false);
+  const [imprimiendo, setImprimiendo] = useState<"libro" | "tarjetas" | null>(null);
+  const [pdfMenuOpen, setPdfMenuOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   /** Accion destructiva a la espera de confirmacion. */
   const [confirmando, setConfirmando] = useState<"descartar" | "borrar" | null>(null);
@@ -229,10 +230,15 @@ export default function ArmyEditor() {
     setCoverId(version.coverId);
   }, []);
 
+  // Los dos menus de la barra ("En pdf" y "Mas opciones") se cierran igual.
+  const algunMenuAbierto = menuOpen || pdfMenuOpen;
   useEffect(() => {
-    if (!menuOpen) return undefined;
-    const cerrar = () => setMenuOpen(false);
-    const conEscape = (event: KeyboardEvent) => event.key === "Escape" && setMenuOpen(false);
+    if (!algunMenuAbierto) return undefined;
+    const cerrar = () => {
+      setMenuOpen(false);
+      setPdfMenuOpen(false);
+    };
+    const conEscape = (event: KeyboardEvent) => event.key === "Escape" && cerrar();
     // En captura: si no, el propio clic que abre el menu lo cerraria acto seguido.
     document.addEventListener("click", cerrar);
     document.addEventListener("keydown", conEscape);
@@ -240,7 +246,7 @@ export default function ArmyEditor() {
       document.removeEventListener("click", cerrar);
       document.removeEventListener("keydown", conEscape);
     };
-  }, [menuOpen]);
+  }, [algunMenuAbierto]);
 
   // La pregunta de entrada no se puede esquivar; la reabierta a peticion si.
   useEffect(() => {
@@ -1109,7 +1115,8 @@ export default function ArmyEditor() {
         librosConocidos={librosConocidos}
         avatarDe={avatarDe}
         puedeLanzarHechizos={puedeLanzarHechizos}
-        onCerrar={() => setImprimiendo(false)}
+        modoInicial={imprimiendo}
+        onCerrar={() => setImprimiendo(null)}
       />
     );
   }
@@ -1204,9 +1211,46 @@ export default function ArmyEditor() {
             </button>
           ) : null}
           {army ? (
-            <button type="button" onClick={() => setImprimiendo(true)}>
-              Imprimir
-            </button>
+            <div className="menu-wrap">
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={pdfMenuOpen}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setMenuOpen(false);
+                  setPdfMenuOpen((abierto) => !abierto);
+                }}
+              >
+                En pdf ▾
+              </button>
+              {pdfMenuOpen ? (
+                <div className="menu" role="menu">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    title="Fichas grandes con el texto completo de reglas, armas, equipo y hechizos, para consultar durante la partida."
+                    onClick={() => {
+                      setPdfMenuOpen(false);
+                      setImprimiendo("libro");
+                    }}
+                  >
+                    Como libro
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    title="Cada carta una sola vez y con su dorso, a tamaño real, para plastificar y recortar."
+                    onClick={() => {
+                      setPdfMenuOpen(false);
+                      setImprimiendo("tarjetas");
+                    }}
+                  >
+                    Como tarjetas
+                  </button>
+                </div>
+              ) : null}
+            </div>
           ) : null}
           {draft && !viendoBorrador ? (
             <button type="button" className="primary" onClick={() => setDecidirBorrador("peticion")}>
@@ -1233,6 +1277,7 @@ export default function ArmyEditor() {
                 aria-label="Mas opciones"
                 onClick={(event) => {
                   event.stopPropagation();
+                  setPdfMenuOpen(false);
                   setMenuOpen((abierto) => !abierto);
                 }}
               >

@@ -849,10 +849,28 @@
    segun cuantas caben, y el reverso reutiliza la misma anchura de columna. */
 .print-mazo + .print-mazo { margin-top: 32px; }
 .print-mazo-title { margin: 0 0 12px; }
-.print-hoja {
-  display: grid; justify-content: center; gap: 4mm;
-  margin-bottom: 14px; padding: 8px; border: 1px solid var(--opr-border-strong); border-radius: 8px;
+/* Sin marco de pagina: lo que se mira son las cartas, no la hoja. `safe`
+   porque una hoja mas ancha que la pantalla, centrada a secas, se sale por
+   los dos lados y la parte izquierda no hay scroll que la alcance. */
+.print-hoja { display: grid; justify-content: safe center; gap: 4mm; margin-bottom: 14px; }
+/* Las cartas van a escala de pantalla y una hoja de tarot pasa de los
+   1300 px: en pantallas estrechas el mazo se recorre de lado. */
+@media screen {
+  .print-tarjetas { overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 8px; }
 }
+/* Mientras se genera el PDF (pdfImpresion.ts): lo mismo que `@media print`
+   hace con estas vistas, pero en pantalla, que es donde se fotografian. La
+   hoja de tarjetas mide lo que miden sus cartas, para colocarla en el A4 a
+   tamano real; el libro es la hoja A4 con su margen, sin marco de pantalla. */
+.pdf-a-escala { --ucard-esc: 1; --scard-esc: 1; }
+.pdf-a-escala .print-hoja { width: max-content; margin: 0; }
+.pdf-a-escala :is(.ucard, .scard) { box-shadow: none; }
+.pdf-a-escala :is(.ucard-accion, .ucard-foot) { display: none; }
+.pdf-a-escala .print-dorso { border-color: #000; }
+.pdf-a-escala .print-libro { display: block; width: 210mm; max-width: none; border: 0; box-shadow: none; }
+.pdf-a-escala .print-faccion-titulo { width: 190mm; border-color: #000; color: #000; }
+.pdf-a-escala .libro-ficha { width: 190mm; margin: 0 0 2mm; }
+.pdf-a-escala .libro-ficha-opciones { width: 182mm; margin-left: 8mm; }
 /* Las columnas de cada grid las fija en linea VistaTarjetas, calculadas con
    cuadriculaPorHoja: dependen del tamano de carta, no son fijas aqui. */
 /* Sin depender de fondos: muchas impresoras y navegadores no imprimen los
@@ -873,7 +891,7 @@
 .print-dorso-vacio { visibility: hidden; }
 @media print {
   :root { --ucard-esc: 1; --scard-esc: 1; }
-  .print-hoja { border: 0; break-after: page; padding: 0; margin: 0; }
+  .print-hoja { break-after: page; margin: 0; }
   .print-dorso { border-color: #000; }
   /* En la seccion entera, no solo en las hojas: `page` se hereda, y puesto
      solo en las hojas el titulo se queda en la pagina por defecto —vertical—
@@ -917,4 +935,6 @@
   background: none; border: 0; padding: 0; margin: 0; cursor: pointer;
   text-decoration: underline dotted; text-underline-offset: 0.3mm;
 }
-.scard-mision-link:hover { color: var(--ucard-tinta); }
+.scard-mision-link:hover { color: var(--ucard-tinta); }.print-pdf-aviso { margin: 0 0 16px; font-size: 0.9rem; }
+.print-pdf-error { margin: 0 0 16px; color: var(--opr-accent); font-weight: 600; }
+@media print { .print-pdf-aviso, .print-pdf-error { display: none; } }
