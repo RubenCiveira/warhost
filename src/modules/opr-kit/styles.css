@@ -944,5 +944,30 @@
   text-decoration: underline dotted; text-underline-offset: 0.3mm;
 }
 .scard-mision-link:hover { color: var(--ucard-tinta); }.print-pdf-aviso { margin: 0 0 16px; font-size: 0.9rem; }
+/* Mientras se genera el PDF: capa oscura por encima de la vista, que ademas
+   tapa el salto de las cartas a escala de papel. Va fuera del contenedor que
+   se fotografia, asi que no sale en el PDF. */
+.print-pdf-capa {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center; padding: 24px;
+  background: rgb(6 8 9 / 0.78);
+}
+.print-pdf-espera {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 22px; border: 1px solid var(--opr-border-strong);
+  background: var(--opr-surface); color: var(--opr-text); box-shadow: var(--opr-raise);
+  font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.print-pdf-spinner {
+  width: 22px; height: 22px; flex: 0 0 auto; border-radius: 50%;
+  border: 2px solid var(--opr-border-strong); border-top-color: var(--opr-accent);
+  animation: print-pdf-giro 0.7s linear infinite;
+}
+@keyframes print-pdf-giro { to { transform: rotate(360deg); } }
+/* Con el PDF hecho, el mismo recuadro pregunta que hacer con el. */
+.print-pdf-dialogo { flex-direction: column; align-items: stretch; gap: 6px; min-width: min(320px, 100%); }
+.print-pdf-titulo { margin: 0; font-family: var(--opr-label-font); font-size: 1.1rem; text-transform: var(--opr-band-transform); letter-spacing: 0.04em; }
+.print-pdf-archivo { margin: 0 0 10px; color: var(--opr-muted); font-weight: 400; font-size: 0.9rem; overflow-wrap: anywhere; }
+.print-pdf-acciones { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .print-pdf-error { margin: 0 0 16px; color: var(--opr-accent); font-weight: 600; }
 @media print { .print-pdf-aviso, .print-pdf-error { display: none; } }

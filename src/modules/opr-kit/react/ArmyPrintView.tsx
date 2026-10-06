@@ -21,7 +21,7 @@ import SpellCard from "./SpellCard";
 import UnitCard from "./UnitCard";
 import LoreText from "./LoreText";
 import { useTextos } from "./textos";
-import { descargarPdfLibro, descargarPdfTarjetas } from "./pdfImpresion";
+import { abrirPdf, generarPdfLibro, generarPdfTarjetas, guardarPdf } from "./pdfImpresion";
 import type { Textos } from "./textos";
 
 /** Los mismos mm que fijan `--ucard-w/h` y `--scard-w/h` en styles.css: hay
@@ -708,13 +708,20 @@ export default function ArmyPrintView({
   const filas = useMemo(() => emparejarHeroes(units, entradasAttachedTo), [units, entradasAttachedTo]);
   const cartas = useMemo(() => cartasDe(glosario, units, librosConocidos, puedeLanzarHechizos), [glosario, units, librosConocidos, puedeLanzarHechizos]);
   const vistaRef = useRef<HTMLDivElement>(null);
-  const [progresoPdf, setProgresoPdf] = useState<{ hecha: number; total: number } | null>(null);
+  // Abierta para descargar, la capa de espera esta desde el primer fotograma:
+  // si no, se veria un instante la vista antes de que arranque el PDF.
+  const [progresoPdf, setProgresoPdf] = useState<{ hecha: number; total: number } | null>(
+    modoInicial ? { hecha: 0, total: 0 } : null,
+  );
   const [errorPdf, setErrorPdf] = useState(false);
+  /** El PDF ya generado, a la espera de que se elija abrirlo o guardarlo. */
+  const [pdfListo, setPdfListo] = useState<{ pdf: Blob; archivo: string } | null>(null);
+  const primeraAccionRef = useRef<HTMLButtonElement>(null);
   // El estado no se actualiza a tiempo para frenar un segundo clic, ni el
   // doble montaje de StrictMode: una ref si.
   const generando = useRef(false);
 
-  const descargarPdf = async () => {
+  const generarPdf = async () => {
     const contenedor = vistaRef.current;
     if (!contenedor || modo === "elegir" || generando.current) return;
     generando.current = true;
@@ -722,7 +729,8 @@ export default function ArmyPrintView({
     const archivo = `${nombre || noun.singular} - ${modo === "libro" ? t.modoLibro : t.modoTarjetas}.pdf`;
     const avanzar = (hecha: number, total: number) => setProgresoPdf({ hecha, total });
     try {
-      await (modo === "libro" ? descargarPdfLibro : descargarPdfTarjetas)(contenedor, archivo, avanzar);
+      const pdf = await (modo === "libro" ? generarPdfLibro : generarPdfTarjetas)(contenedor, avanzar);
+      if (pdf) setPdfListo({ pdf, archivo });
     } catch (error) {
       console.error(error);
       setErrorPdf(true);
@@ -736,23 +744,72 @@ export default function ArmyPrintView({
   useEffect(() => {
     if (!abiertoConModo.current) return;
     abiertoConModo.current = false;
-    void descargarPdf();
+    void generarPdf();
     // Solo al abrir: despues, el PDF se pide con el boton.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Abrir, guardar o cerrar terminan con el PDF: si se vino a por el desde el
+  // ejercito, se vuelve a el.
+  const terminarPdf = () => {
+    setPdfListo(null);
+    if (modoInicial) onCerrar();
+  };
+  const abrir = () => {
+    if (!pdfListo) return;
+    abrirPdf(pdfListo.pdf, pdfListo.archivo);
+    terminarPdf();
+  };
+  const guardar = async () => {
+    if (pdfListo && (await guardarPdf(pdfListo.pdf, pdfListo.archivo))) terminarPdf();
+  };
+
+  useEffect(() => {
+    if (!pdfListo) return undefined;
+    primeraAccionRef.current?.focus();
+    const conEscape = (event: KeyboardEvent) => event.key === "Escape" && terminarPdf();
+    document.addEventListener("keydown", conEscape);
+    return () => document.removeEventListener("keydown", conEscape);
+  }, [pdfListo]);
 
   const volver = () => (modo === "elegir" || modoInicial ? onCerrar() : setModo("elegir"));
 
   return (
     <div className="print-vista">
+      {progresoPdf ? (
+        <div className="print-pdf-capa" role="status" aria-live="polite">
+          <div className="print-pdf-espera">
+            <span className="print-pdf-spinner" aria-hidden="true" />
+            <span>{progresoPdf.total > 0 ? t.generandoPdf(progresoPdf.hecha, progresoPdf.total) : t.preparandoPdf}</span>
+          </div>
+        </div>
+      ) : pdfListo ? (
+        <div className="print-pdf-capa">
+          <div className="print-pdf-espera print-pdf-dialogo" role="dialog" aria-modal="true" aria-labelledby="print-pdf-listo">
+            <p id="print-pdf-listo" className="print-pdf-titulo">{t.pdfListo}</p>
+            <p className="print-pdf-archivo">{pdfListo.archivo}</p>
+            <div className="print-pdf-acciones">
+              <button type="button" className="ghost" onClick={terminarPdf}>
+                {t.cerrar}
+              </button>
+              <button type="button" onClick={() => void guardar()}>
+                {t.guardarPdf}
+              </button>
+              <button type="button" className="primary" ref={primeraAccionRef} onClick={abrir}>
+                {t.abrirPdf}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="print-toolbar">
         <button type="button" onClick={volver}>
           {modo === "elegir" ? t.cancelar : modoInicial ? t.volver : t.volverAElegir}
         </button>
         <h2 className="print-toolbar-title">{t.imprimirTitulo(nombre || noun.singular)}</h2>
         {modo !== "elegir" ? (
-          <button type="button" className="primary" onClick={() => void descargarPdf()} disabled={progresoPdf !== null}>
-            {progresoPdf ? t.generandoPdf(progresoPdf.hecha, progresoPdf.total) : t.descargarPdf}
+          <button type="button" className="primary" onClick={() => void generarPdf()} disabled={progresoPdf !== null}>
+            {t.crearPdf}
           </button>
         ) : null}
       </div>

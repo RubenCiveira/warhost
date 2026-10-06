@@ -76,8 +76,13 @@ export interface Textos {
   // Impresion.
   imprimir: string;
   imprimirTitulo: (nombre: string) => string;
-  descargarPdf: string;
+  crearPdf: string;
   generandoPdf: (hecha: number, total: number) => string;
+  preparandoPdf: string;
+  pdfListo: string;
+  abrirPdf: string;
+  guardarPdf: string;
+  cerrar: string;
   errorPdf: string;
   pdfTamanoReal: string;
   cancelar: string;
@@ -160,8 +165,13 @@ export const es: Textos = {
   tirada: (umbral) => `Tira 1D6: iguala o supera ${umbral}`,
   imprimir: "Imprimir",
   imprimirTitulo: (nombre) => `Imprimir ${nombre}`,
-  descargarPdf: "Descargar PDF",
+  crearPdf: "Crear PDF",
   generandoPdf: (hecha, total) => `Generando PDF… ${hecha}/${total}`,
+  preparandoPdf: "Preparando el PDF…",
+  pdfListo: "PDF listo",
+  abrirPdf: "Abrir",
+  guardarPdf: "Guardar",
+  cerrar: "Cerrar",
   errorPdf: "No se pudo generar el PDF. Vuelve a intentarlo; si sigue fallando, usa Imprimir del navegador.",
   pdfTamanoReal: "Imprime el PDF a tamaño real (100 %), sin «ajustar a la página»: así todo sale a su medida real.",
   cancelar: "Cancelar",
@@ -245,8 +255,13 @@ export const en: Textos = {
   tirada: (umbral) => `Roll 1D6: ${umbral}+`,
   imprimir: "Print",
   imprimirTitulo: (nombre) => `Print ${nombre}`,
-  descargarPdf: "Download PDF",
+  crearPdf: "Create PDF",
   generandoPdf: (hecha, total) => `Generating PDF… ${hecha}/${total}`,
+  preparandoPdf: "Preparing the PDF…",
+  pdfListo: "PDF ready",
+  abrirPdf: "Open",
+  guardarPdf: "Save",
+  cerrar: "Close",
   errorPdf: "The PDF could not be generated. Try again; if it keeps failing, use the browser's Print.",
   pdfTamanoReal: "Print the PDF at actual size (100%), not \"fit to page\", so everything comes out at its real size.",
   cancelar: "Cancel",
