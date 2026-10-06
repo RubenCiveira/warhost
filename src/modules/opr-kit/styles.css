@@ -8,8 +8,9 @@
  * definidas aqui con especificidad cero: cualquier `:root { --opr-accent: … }`
  * de la aplicacion las sustituye.
  *
- * Tipografias: "Saira Condensed" para rotulos e "IBM Plex Sans" para el texto.
- * El paquete no las carga; sin ellas se usa la sans-serif del sistema.
+ * Tipografias: "Saira Condensed" para rotulos (`--opr-label-font`, que la
+ * aplicacion cambia por ambientacion) e "IBM Plex Sans" para el texto. El
+ * paquete no las carga; sin ellas se usa la sans-serif del sistema.
  *
  * Los botones de las barras de impresion llevan `primary` y las notas `muted`:
  * son las clases que la aplicacion puede estilar para integrarlos. */
@@ -21,6 +22,7 @@
   --opr-band-transform: uppercase;
   --opr-band-variant: normal;
   --opr-border: #333b40;
+  --opr-label-font: "Saira Condensed", sans-serif;
   --opr-border-strong: #47525a;
   --opr-muted: #8b959b;
   --opr-raise: 0 14px 30px rgba(0, 0, 0, 0.5);
@@ -48,8 +50,8 @@
 .lore-markdown > *:first-child { margin-top: 0; }
 .lore-markdown > *:last-child { margin-bottom: 0; }
 .lore-markdown h2, .lore-markdown h3, .lore-markdown h4 {
-  margin: 0.9em 0 0.35em; font-family: "Saira Condensed", sans-serif;
-  letter-spacing: 0.04em; text-transform: uppercase;
+  margin: 0.9em 0 0.35em; font-family: var(--opr-label-font);
+  letter-spacing: 0.04em; text-transform: var(--opr-band-transform);
 }
 .lore-markdown p { margin: 0 0 0.75em; }
 .lore-markdown ul, .lore-markdown ol { margin: 0 0 0.75em 1.2em; padding: 0; }
@@ -143,7 +145,7 @@
   display: flex; align-items: center;
   padding: 0 2mm; border-radius: 0.8mm 0 0 0.8mm;
   background: var(--ucard-banda); color: var(--ucard-banda-texto);
-  font-family: "Saira Condensed", sans-serif;
+  font-family: var(--opr-label-font);
   font-weight: 700; font-size: 3.4mm; line-height: 1.1;
   letter-spacing: var(--opr-band-letter);
   text-transform: var(--opr-band-transform);
@@ -175,7 +177,7 @@
 .ucard-stat:last-child { border-radius: 0 0.8mm 0.8mm 0; }
 .ucard-stat-key {
   display: block; color: var(--ucard-realce);
-  font-family: "Saira Condensed", sans-serif;
+  font-family: var(--opr-label-font);
   font-weight: 700; font-size: 2mm; line-height: 1.2; letter-spacing: 0.06em;
   text-transform: var(--opr-band-transform); font-variant: var(--opr-band-variant);
 }
@@ -193,8 +195,8 @@
 }
 .ucard-table thead th {
   background: var(--ucard-trim); color: var(--ucard-banda-texto);
-  font-family: "Saira Condensed", sans-serif;
-  font-weight: 700; font-size: 2.2mm; letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--opr-label-font);
+  font-weight: 700; font-size: 2.2mm; letter-spacing: 0.06em; text-transform: var(--opr-band-transform);
   padding: 0.7mm 1.4mm; text-align: left;
 }
 .ucard-table td { padding: 0.7mm 1.4mm; vertical-align: middle; }
@@ -212,7 +214,7 @@
    parte de lo que la unidad es, igual que su nombre. */
 .ucard-combinada {
   margin-left: 2mm; padding: 0.3mm 1.4mm;
-  font-size: 2.1mm; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 2.1mm; letter-spacing: 0.08em; text-transform: var(--opr-band-transform);
   border: 0.3mm solid currentColor; border-radius: 0.8mm;
   color: var(--ucard-realce); vertical-align: middle;
 }
@@ -235,15 +237,15 @@
 .ucard-columna-cab { display: flex; align-items: baseline; gap: 1.4mm; margin-bottom: 0.6mm; }
 .ucard-columna-nombre {
   flex: 1 1 auto; min-width: 0;
-  font-family: "Saira Condensed", sans-serif;
-  font-weight: 700; font-size: 2.1mm; letter-spacing: 0.03em; text-transform: uppercase;
+  font-family: var(--opr-label-font);
+  font-weight: 700; font-size: 2.1mm; letter-spacing: 0.03em; text-transform: var(--opr-band-transform);
   color: var(--ucard-tenue);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .ucard-columna-mini {
   flex: 0 0 auto; display: flex; gap: 1.1mm; white-space: nowrap;
   font-weight: 600; font-size: 1.8mm; font-variant-numeric: tabular-nums;
-  text-transform: uppercase; letter-spacing: 0.02em;
+  text-transform: var(--opr-band-transform); letter-spacing: 0.02em;
 }
 .ucard-columna-mini > span + span { padding-left: 1.1mm; border-left: 0.3mm solid var(--ucard-filete); }
 /* Dentro de la columna el padding lateral ya lo pone ella; las piezas que
@@ -267,15 +269,15 @@
    lo que hay que ver rapido. */
 .ucard-chip-liderazgo {
   background: var(--ucard-trim); color: var(--ucard-banda-texto); border-color: var(--ucard-trim);
-  font-family: "Saira Condensed", sans-serif; font-weight: 700;
-  letter-spacing: 0.05em; text-transform: uppercase; cursor: default;
+  font-family: var(--opr-label-font); font-weight: 700;
+  letter-spacing: 0.05em; text-transform: var(--opr-band-transform); cursor: default;
 }
 .ucard-chip-liderazgo b { color: var(--opr-accent); font-size: 1.15em; }
 
 .ucard-accion { margin-top: auto; padding: 1.5mm 2.5mm 0; display: flex; justify-content: flex-end; gap: 1.2mm; }
 .ucard-accion button {
-  font-family: "Saira Condensed", sans-serif;
-  font-size: 2.6mm; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--opr-label-font);
+  font-size: 2.6mm; font-weight: 700; letter-spacing: 0.06em; text-transform: var(--opr-band-transform);
   padding: 0.9mm 2.4mm; cursor: pointer;
   color: var(--ucard-banda-texto); background: var(--ucard-banda);
   border: 0; border-radius: 0.9mm;
@@ -305,8 +307,8 @@
 
 .ucard-accion { margin-top: auto; padding: 1.5mm 2.5mm 0; display: flex; justify-content: flex-end; gap: 1.2mm; }
 .ucard-accion button {
-  font-family: "Saira Condensed", sans-serif;
-  font-size: 2.6mm; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--opr-label-font);
+  font-size: 2.6mm; font-weight: 700; letter-spacing: 0.06em; text-transform: var(--opr-band-transform);
   padding: 0.9mm 2.4mm; cursor: pointer;
   color: var(--ucard-banda-texto); background: var(--ucard-banda);
   border: 0; border-radius: 0.9mm;
@@ -343,9 +345,9 @@
    cuerpo de cabecera dentro de una carta de 70 mm de alto. */
 .ucard-bloque-title {
   margin: 0 0 1mm;
-  font-family: "Saira Condensed", sans-serif;
+  font-family: var(--opr-label-font);
   font-weight: 700; font-size: 2.2mm; line-height: 1.2;
-  letter-spacing: 0.08em; text-transform: uppercase;
+  letter-spacing: 0.08em; text-transform: var(--opr-band-transform);
   color: var(--ucard-tenue);
 }
 
@@ -411,24 +413,24 @@
 .ucard-upgrades { margin: 8px 0 0; font-size: 0.84rem; line-height: 1.45; }
 .ucard-label {
   display: inline-block; margin-right: 6px;
-  font-family: "Saira Condensed", sans-serif;
-  font-weight: 700; font-size: 0.66rem; letter-spacing: 0.11em; text-transform: uppercase;
+  font-family: var(--opr-label-font);
+  font-weight: 700; font-size: 0.66rem; letter-spacing: 0.11em; text-transform: var(--opr-band-transform);
   color: var(--opr-muted);
 }
 
 .ucard-options { margin-top: 8px; border-top: 1px solid var(--ucard-filete); padding-top: 8px; }
 .ucard-options summary {
   cursor: pointer; color: var(--opr-accent);
-  font-family: "Saira Condensed", sans-serif;
-  font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--opr-label-font);
+  font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: var(--opr-band-transform);
 }
 /* En la ficha las opciones no se pliegan, asi que esto es un rotulo y no un
    mando: misma tipografia que los demas rotulos de la carta, sin color de
    accion ni cursor que invite a pulsarlo. */
 .ucard-options-title {
   margin: 0 0 1mm; color: var(--ucard-tenue);
-  font-family: "Saira Condensed", sans-serif;
-  font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  font-family: var(--opr-label-font);
+  font-weight: 700; letter-spacing: 0.08em; text-transform: var(--opr-band-transform);
 }
 .ucard-section { margin-top: 8px; }
 .ucard-section-head { margin: 0 0 3px; font-size: 0.8rem; font-weight: 600; }
@@ -517,7 +519,7 @@
   display: flex; align-items: center;
   padding: 0.8mm 1.3mm; border-radius: 0.6mm 0 0 0.6mm;
   background: var(--ucard-banda); color: var(--ucard-banda-texto);
-  font-family: "Saira Condensed", sans-serif;
+  font-family: var(--opr-label-font);
   font-weight: 700; font-size: 2.625mm; line-height: 1.12;
   letter-spacing: var(--opr-band-letter);
   text-transform: var(--opr-band-transform);
@@ -531,7 +533,7 @@
 }
 .scard-valor-key {
   color: var(--ucard-realce);
-  font-family: "Saira Condensed", sans-serif;
+  font-family: var(--opr-label-font);
   font-weight: 700; font-size: 1.47mm; line-height: 1.2; letter-spacing: 0.06em;
   text-transform: var(--opr-band-transform); font-variant: var(--opr-band-variant);
 }
@@ -557,7 +559,7 @@
   font-size: 2.7mm; color: var(--ucard-tenue);
 }
 .scard-faccion {
-  font-family: "Saira Condensed", sans-serif;
+  font-family: var(--opr-label-font);
   font-weight: 700; letter-spacing: 0.08em;
   text-transform: var(--opr-band-transform); font-variant: var(--opr-band-variant);
   color: var(--ucard-trim);
@@ -760,8 +762,8 @@
 .print-faccion-unidad { display: grid; justify-items: center; gap: 2mm; }
 .print-faccion-extra { width: min(100%, 190mm); margin: 0 auto 8mm; break-inside: avoid; }
 .print-faccion-extra h2 {
-  margin: 0 0 3mm; font-family: "Saira Condensed", sans-serif;
-  letter-spacing: 0.06em; text-transform: uppercase;
+  margin: 0 0 3mm; font-family: var(--opr-label-font);
+  letter-spacing: 0.06em; text-transform: var(--opr-band-transform);
 }
 .print-card-grid {
   display: grid; gap: 4mm; grid-template-columns: repeat(auto-fill, calc(var(--scard-w) * var(--scard-esc)));
@@ -889,7 +891,7 @@
 }
 .scard-title-input {
   flex: 1; min-width: 0; padding: 0.8mm 1.3mm;
-  font-family: "Saira Condensed", sans-serif;
+  font-family: var(--opr-label-font);
   font-weight: 700; font-size: 2.625mm;
   background: var(--ucard-papel); color: var(--ucard-tinta);
 }
