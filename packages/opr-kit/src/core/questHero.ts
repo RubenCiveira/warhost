@@ -9,8 +9,8 @@
  * Defensa no la toca nada: ni la unidad base, ni ninguna clase, ni ninguna de
  * las elecciones de combate.
  */
-import type { HeroClass, HeroSkill } from "./types";
-import { parseHeroSkills } from "./types";
+import type { HeroClass, HeroSkill } from "./model";
+import { parseHeroSkills } from "./model";
 
 export const HERO_ABILITY_CHOICES = ["strength", "dexterity", "willpower"] as const;
 export type HeroAbilityChoice = (typeof HERO_ABILITY_CHOICES)[number];

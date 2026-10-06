@@ -12,7 +12,7 @@ import type { ResolvedUnit } from "./armyForgeResolve";
 import { getGameSystem, isQuestSystem } from "./gameSystems";
 import type { GameSystemId } from "./gameSystems";
 import { perfilInicialQuest, QUEST_STARTING_GOLD, reglasInicialesQuest } from "./questHero";
-import type { HeroClass } from "./types";
+import type { HeroClass } from "./model";
 import { gainIsWeapon, gainName, ruleLabelsFromGains, walkGains } from "./armyForgeGains";
 
 /** Cuantos modelos afecta una seccion, o cuantas opciones deja elegir. */
@@ -79,7 +79,7 @@ export interface BuilderEntry {
    */
   attachedTo?: string;
   /**
-   * `$id` de la fila de `hero_classes` elegida para este heroe. Solo tiene
+   * `id` de la clase de heroe (`HeroClass`) elegida. Solo tiene
    * sentido en Star Quest / Fantasy Quest, donde un heroe elige una clase en
    * vez de unirse a una unidad.
    */
@@ -550,7 +550,7 @@ export function toResolvedUnit(
   // clase (el asistente ya lo ensena asi, con el perfil base): el mismo
   // criterio de `necesitaClaseDeHeroe`, no si `heroClassId` esta puesto.
   const esHeroeDeQuest = gameSystem !== undefined && necesitaClaseDeHeroe(entry, sections, gameSystem);
-  const clase = entry.heroClassId ? heroClasses.find((c) => c.$id === entry.heroClassId) : undefined;
+  const clase = entry.heroClassId ? heroClasses.find((c) => c.id === entry.heroClassId) : undefined;
   const rules = esHeroeDeQuest ? reglasInicialesQuest(clase, entryRules(entry, sections)) : entryRules(entry, sections);
   const perfilQuest = esHeroeDeQuest ? perfilInicialQuest(clase, toughOf(rules)) : null;
   const oroQuest = perfilQuest ? Math.max(0, QUEST_STARTING_GOLD - questGoldSpent(entry, sections, gameSystem)) : undefined;
@@ -632,7 +632,7 @@ export interface StoredEntry {
    * guarda por posicion porque la `key` de cada entrada es de usar y tirar.
    */
   attachedTo?: number;
-  /** `$id` de `hero_classes` elegida. Solo se usa en Star Quest / Fantasy Quest. */
+  /** `id` de la `HeroClass` elegida. Solo se usa en Star Quest / Fantasy Quest. */
   heroClassId?: string;
   /** Nombre propio del heroe, puesto por el jugador. */
   customName?: string;

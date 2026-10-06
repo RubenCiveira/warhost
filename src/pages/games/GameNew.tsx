@@ -8,7 +8,7 @@ import { listAssociations, listMyMemberships } from "../../api/associations";
 import { listMissions } from "../../api/content";
 import { addPlayer, addUnits, createGame } from "../../api/games";
 import { parseStoredList } from "../../api/armyForge";
-import { armyNounFor } from "../../lib/gameSystems";
+import { armyNounFor } from "@warhost/opr-kit/core/gameSystems";
 import type { Army, Association, Mission } from "../../lib/types";
 import { errorMessage } from "../../lib/format";
 import { ErrorBanner, PageHead, Spinner } from "../../components/ui";

@@ -1,4 +1,4 @@
-import type { ArmyBook, ArmyUnit, CatalogRule } from "../api/catalog";
+import type { ArmyBook, ArmyUnit, CatalogRule } from "./model";
 import type { UpgradeSection } from "./builder";
 import { parseHabilidad } from "./reglas";
 import type { Habilidad } from "./reglas";
@@ -20,11 +20,11 @@ function nombreBase(etiqueta: string): string {
  * `coreType` las que vienen del reglamento, y deja en nulo las suyas. Sobre 14
  * libros de Grimdark Future, el 56% de las reglas son exclusivas de una faccion.
  */
-export function habilidadesDeFaccion(
+export function habilidadesDeFaccion<R extends CatalogRule>(
   book: ArmyBook | null,
-  glosario: Map<string, CatalogRule>,
+  glosario: Map<string, R>,
   units: ArmyUnit[] = [],
-): CatalogRule[] {
+): R[] {
   // Lo que publica el libro es la respuesta buena. Pero un libro que aun no se
   // haya vuelto a volcar no lo lleva, y entonces no es que no tenga reglas
   // propias: es que no lo sabemos. En ese caso se deducen de las que usan sus
@@ -34,13 +34,13 @@ export function habilidadesDeFaccion(
     ? book.ruleNames
     : [...new Set(units.flatMap((unit) => unit.rules ?? []).map(nombreBase))];
 
-  const vistas = new Set<string>();
+  const vistas = new Set<R>();
   return nombres
     .map((nombre) => glosario.get(nombre.toLowerCase()))
-    .filter((regla): regla is CatalogRule => {
+    .filter((regla): regla is R => {
       if (!regla || regla.coreType !== null) return false;
-      if (vistas.has(regla.$id)) return false;
-      vistas.add(regla.$id);
+      if (vistas.has(regla)) return false;
+      vistas.add(regla);
       return true;
     })
     .sort((a, b) => a.name.localeCompare(b.name, "es"));
@@ -75,11 +75,11 @@ function gainConcedeCaster(gain: Gain): boolean {
  * in melee" arrastra la carta de Bane aunque ninguna unidad la lleve escrita, y
  * se repite hasta que ninguna descripcion nueva mencione otra.
  */
-export function reglasGeneralesDeFaccion(
-  glosario: Map<string, CatalogRule>,
+export function reglasGeneralesDeFaccion<R extends CatalogRule>(
+  glosario: Map<string, R>,
   units: ArmyUnit[] = [],
   propias: CatalogRule[] = [],
-): CatalogRule[] {
+): R[] {
   const directos = new Set<string>();
   for (const unit of units) {
     for (const etiqueta of unit.rules ?? []) directos.add(nombreBase(etiqueta));
@@ -88,11 +88,11 @@ export function reglasGeneralesDeFaccion(
     }
   }
 
-  const nucleo = new Map<string, CatalogRule>();
+  const nucleo = new Set<R>();
   const textos = propias.map((regla) => regla.description).filter(Boolean);
-  const incorporar = (regla: CatalogRule | undefined): boolean => {
-    if (!regla || regla.coreType === null || nucleo.has(regla.$id)) return false;
-    nucleo.set(regla.$id, regla);
+  const incorporar = (regla: R | undefined): boolean => {
+    if (!regla || regla.coreType === null || nucleo.has(regla)) return false;
+    nucleo.add(regla);
     if (regla.description) textos.push(regla.description);
     return true;
   };
@@ -108,11 +108,11 @@ export function reglasGeneralesDeFaccion(
     cambio = false;
     const corpus = textos.join("\n");
     for (const regla of candidatas) {
-      if (!nucleo.has(regla.$id) && mencionada(regla.name, corpus) && incorporar(regla)) cambio = true;
+      if (!nucleo.has(regla) && mencionada(regla.name, corpus) && incorporar(regla)) cambio = true;
     }
   }
 
-  return [...nucleo.values()].sort((a, b) => a.name.localeCompare(b.name, "es"));
+  return [...nucleo].sort((a, b) => a.name.localeCompare(b.name, "es"));
 }
 
 /**
@@ -125,7 +125,7 @@ export function reglasGeneralesDeFaccion(
  * reglamento basico: el nucleo mezcla reglas propias y comunes, porque sirve
  * para filtrar ambas pestanas por igual.
  */
-export function reglasUsadasEnEjercito(glosario: Map<string, CatalogRule>, units: ResolvedUnit[]): CatalogRule[] {
+export function reglasUsadasEnEjercito<R extends CatalogRule>(glosario: Map<string, R>, units: ResolvedUnit[]): R[] {
   const directos = new Set<string>();
   for (const unit of units) {
     for (const etiqueta of unit.rules) directos.add(nombreBase(etiqueta));
@@ -134,11 +134,11 @@ export function reglasUsadasEnEjercito(glosario: Map<string, CatalogRule>, units
     }
   }
 
-  const nucleo = new Map<string, CatalogRule>();
+  const nucleo = new Set<R>();
   const textos: string[] = [];
-  const incorporar = (regla: CatalogRule | undefined): boolean => {
-    if (!regla || nucleo.has(regla.$id)) return false;
-    nucleo.set(regla.$id, regla);
+  const incorporar = (regla: R | undefined): boolean => {
+    if (!regla || nucleo.has(regla)) return false;
+    nucleo.add(regla);
     if (regla.description) textos.push(regla.description);
     return true;
   };
@@ -150,11 +150,11 @@ export function reglasUsadasEnEjercito(glosario: Map<string, CatalogRule>, units
     cambio = false;
     const corpus = textos.join("\n");
     for (const regla of candidatas) {
-      if (!nucleo.has(regla.$id) && mencionada(regla.name, corpus) && incorporar(regla)) cambio = true;
+      if (!nucleo.has(regla) && mencionada(regla.name, corpus) && incorporar(regla)) cambio = true;
     }
   }
 
-  return [...nucleo.values()];
+  return [...nucleo];
 }
 
 /** Cierto si alguna de estas unidades puede lanzar hechizos: no dice cuales

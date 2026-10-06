@@ -1,5 +1,6 @@
 import type { Models } from "appwrite";
-import type { GameSystemId, Setting } from "./gameSystems";
+import type { GameSystemId, Setting } from "@warhost/opr-kit/core/gameSystems";
+import type { HeroClass as CoreHeroClass } from "@warhost/opr-kit/core/model";
 
 export type Row = Models.Row;
 
@@ -152,17 +153,6 @@ export interface Mission extends Row {
   sortOrder: number;
 }
 
-export type HeroSkillStat = "strength" | "dexterity" | "willpower";
-
-/** Una habilidad de heroe de Quest: de clase (tiers 0-3) o del set comun a todas. */
-export interface HeroSkill {
-  tier: 0 | 1 | 2 | 3;
-  stat: HeroSkillStat;
-  name: string;
-  description: string;
-  sortOrder: number;
-}
-
 /**
  * Una clase de heroe de Quest (Star Quest / Fantasy Quest), con su feat y sus
  * habilidades de tier 0 (iniciales) a 3 (Lvl. 9). `classKey` es el slug estable
@@ -170,29 +160,13 @@ export interface HeroSkill {
  * "berserker" es Berserker en GFSQ y Barbarian en AoFQ); `classKey === "default"`
  * es el set de habilidades comun a todas las clases del sistema.
  */
-export interface HeroClass extends Row {
+export interface HeroClass extends Row, CoreHeroClass {
   gameSystem: GameSystemId;
   setting: Setting;
-  classKey: string;
   name: string;
   description: string | null;
   classFeatName: string | null;
   classFeatText: string | null;
-  /** Lista de `HeroSkill`, serializada en JSON. */
-  skills: string;
-  /**
-   * Que atributos (Fuerza/Destreza/Voluntad) mejora esta clase gratis al
-   * crear el heroe, antes de subir ningun nivel. Transcrito del creador de
-   * heroes de Army Forge: cada clase trae 2 elecciones fijas.
-   */
-  abilityChoices: string[];
-  /**
-   * Que mejoras de combate (las mismas opciones que al subir de nivel, ver
-   * `HeroCombatStatChoice`) trae esta clase gratis al crear el heroe.
-   */
-  combatStatChoices: string[];
-  /** Habilidades de clase que Army Forge concede gratis al crear el heroe. */
-  skillChoices: string[];
   verified: boolean;
   sourceVersion: string | null;
   sortOrder: number;
@@ -212,16 +186,6 @@ export interface QuestShopPackage extends Row {
   verified: boolean;
   sourceVersion: string | null;
   sortOrder: number;
-}
-
-export function parseHeroSkills(raw: string | null | undefined): HeroSkill[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? (parsed as HeroSkill[]) : [];
-  } catch {
-    return [];
-  }
 }
 
 /** Contadores libres por unidad, serializados en la columna `tokens`. */

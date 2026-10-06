@@ -20,17 +20,17 @@ import {
   optionId,
   rehydrateEntries,
   sectionsForUnit,
-} from "../../lib/builder";
-import type { BuilderEntry, UpgradeSection } from "../../lib/builder";
-import { baseLoadout } from "../../lib/loadout";
-import { limitesComposicion } from "../../lib/composicion";
+} from "@warhost/opr-kit/core/builder";
+import type { BuilderEntry, UpgradeSection } from "@warhost/opr-kit/core/builder";
+import { baseLoadout } from "@warhost/opr-kit/core/loadout";
+import { limitesComposicion } from "@warhost/opr-kit/core/composicion";
 import { composeArmyPayload } from "../../lib/armyPayload";
 import { errorMessage } from "../../lib/format";
-import { armyNounFor, getGameSystem } from "../../lib/gameSystems";
+import { armyNounFor, getGameSystem } from "@warhost/opr-kit/core/gameSystems";
 import { EmptyState, ErrorBanner, Spinner } from "../../components/ui";
 import UnitCard from "../../components/UnitCard";
 import RuleCardModal from "../../components/RuleCardModal";
-import type { Habilidad } from "../../lib/reglas";
+import type { Habilidad } from "@warhost/opr-kit/core/reglas";
 
 /** Constructor de ejercitos a partir del catalogo propio. */
 /** Lo que guarda la columna `listJson` de un ejercito. */

@@ -1,6 +1,6 @@
 import type { CatalogRule } from "../api/catalog";
-import { resaltarMenciones } from "../lib/reglas";
-import type { Habilidad } from "../lib/reglas";
+import { resaltarMenciones } from "@warhost/opr-kit/core/reglas";
+import type { Habilidad } from "@warhost/opr-kit/core/reglas";
 
 /**
  * El texto libre de una carta (regla, hechizo o equipo), con las menciones a

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useGameSystem } from "../../context/GameSystemContext";
-import { armyNounFor, getGameSystem } from "../../lib/gameSystems";
+import { armyNounFor, getGameSystem } from "@warhost/opr-kit/core/gameSystems";
 import {
   catalogImageUrl,
   deleteCatalogImage,
@@ -26,18 +26,18 @@ import WarhubPicker from "../../components/WarhubPicker";
 import FactionPrintView from "../../components/FactionPrintView";
 import UnitCard from "../../components/UnitCard";
 import LoreText from "../../components/LoreText";
-import { sectionsForUnit } from "../../lib/builder";
-import { baseLoadout } from "../../lib/loadout";
+import { sectionsForUnit } from "@warhost/opr-kit/core/builder";
+import { baseLoadout } from "@warhost/opr-kit/core/loadout";
 import SpellCard from "../../components/SpellCard";
 import RuleCardModal from "../../components/RuleCardModal";
-import type { Habilidad } from "../../lib/reglas";
-import { parseHabilidad } from "../../lib/reglas";
+import type { Habilidad } from "@warhost/opr-kit/core/reglas";
+import { parseHabilidad } from "@warhost/opr-kit/core/reglas";
 import RuleCard from "../../components/RuleCard";
-import { equipoDeFaccion, habilidadesDeFaccion, reglasGeneralesDeFaccion } from "../../lib/faccion";
-import { agruparUnidades } from "../../lib/unidades";
+import { equipoDeFaccion, habilidadesDeFaccion, reglasGeneralesDeFaccion } from "@warhost/opr-kit/core/faccion";
+import { agruparUnidades } from "@warhost/opr-kit/core/unidades";
 import Tabs from "../../components/Tabs";
-import { parseSpells } from "../../lib/spells";
-import type { UpgradeSection } from "../../lib/builder";
+import { parseSpells } from "@warhost/opr-kit/core/spells";
+import type { UpgradeSection } from "@warhost/opr-kit/core/builder";
 
 function UnitEditorModal({
   unit,

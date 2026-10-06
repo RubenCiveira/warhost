@@ -31,8 +31,8 @@ await build({
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
       import UnitCard from "./src/components/UnitCard";
-      import { baseLoadout } from "./src/lib/loadout";
-      import { parseSections, sectionsForUnit } from "./src/lib/builder";
+      import { baseLoadout } from "./packages/opr-kit/src/core/loadout";
+      import { parseSections, sectionsForUnit } from "./packages/opr-kit/src/core/builder";
       const UNITS = ${JSON.stringify(unidades)};
       const PK = new Map(${JSON.stringify(paquetes.map((p) => [`${BOOK}:${p.packageUid}`, p.sections]))}.map(([k, v]) => [k, parseSections(v)]));
       const PEDIDAS = ${JSON.stringify(PEDIDAS)};

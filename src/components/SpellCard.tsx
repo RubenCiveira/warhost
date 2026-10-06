@@ -1,6 +1,6 @@
 import type { CatalogRule } from "../api/catalog";
-import type { Spell } from "../lib/spells";
-import type { Habilidad } from "../lib/reglas";
+import type { Spell } from "@warhost/opr-kit/core/spells";
+import type { Habilidad } from "@warhost/opr-kit/core/reglas";
 import { densidadScard } from "../lib/cardDensity";
 import TextoConReferencias from "./TextoConReferencias";
 

@@ -55,7 +55,7 @@ pnpm test:edit       # compone, guarda, rehidrata y modifica un ejercito
 ```
 
 Ninguna de las dos necesita navegador: ejecutan los modulos que se despliegan
-(`src/lib/armyForgeResolve.ts` y `src/lib/builder.ts`), que estan separados de la
+(`packages/opr-kit/src/core/armyForgeResolve.ts` y `.../builder.ts`), que estan separados de la
 capa de red justamente para poder ejercitarlos desde Node. `test:builder` lee de
 Appwrite con la CLI, que toma el proyecto del repo del backend; si lo tienes en
 otro sitio, pasale `APPWRITE_DIR`.
@@ -63,8 +63,11 @@ otro sitio, pasale `APPWRITE_DIR`.
 ## Como esta montado
 
 ```
+packages/
+  opr-kit/     @warhost/opr-kit: logica de ejercitos (constructor, reglas,
+               importacion de Army Forge) sin depender de ningun backend
 src/
-  lib/         cliente de Appwrite, tipos de fila, sistemas de juego, formato
+  lib/         cliente de Appwrite, tipos de fila, formato
   api/         una funcion por operacion contra Appwrite; nada de SDK en las vistas
   context/     sesion (AuthContext) y modo de juego elegido (GameSystemContext)
   components/  Layout, puerta de acceso y piezas reutilizables
@@ -73,6 +76,12 @@ src/
 
 Las vistas nunca hablan con el SDK directamente: todo pasa por `src/api`, que es
 donde viven los ids de tabla, las consultas y los permisos de fila.
+
+`@warhost/opr-kit` es un paquete del workspace de pnpm pensado para publicarse y
+reutilizarse en otras aplicaciones, asi que no puede importar nada de `src/`.
+Sus tipos (`core/model.ts`) solo declaran los campos que la logica lee: las
+filas de Appwrite encajan tal cual, salvo `HeroClass`, cuyo `id` neutro rellena
+`src/api/content.ts` a partir del `$id`.
 
 ## Acceso
 
@@ -149,7 +158,7 @@ un objeto puede conceder un **arma** —el Combat Shield concede `Bash`— y la
 ficha la pinta como si fuera una regla. Son 8 usos de 126 en el equipo.
 
 Lo mismo vale para las **opciones de mejora**, que es donde mas falta hace: una
-opcion se consulta justo antes de comprarla. `lib/opciones.ts` desmonta cada
+opcion se consulta justo antes de comprarla. `core/opciones.ts` desmonta cada
 opcion en lo que da —armas con su perfil, equipo, y las reglas de ambos— a
 partir de sus `gains` y no partiendo el texto de la etiqueta, que ya viene
 armado por Army Forge y volver a partirlo seria adivinar. Del catalogo entero

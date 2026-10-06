@@ -1,13 +1,14 @@
 import { useState } from "react";
-import type { HeroClass, HeroSkill, HeroSkillStat } from "../lib/types";
-import { parseHeroSkills } from "../lib/types";
+import type { HeroClass } from "../lib/types";
+import type { HeroSkill, HeroSkillStat } from "@warhost/opr-kit/core/model";
+import { parseHeroSkills } from "@warhost/opr-kit/core/model";
 import {
   HERO_ABILITY_CHOICES,
   HERO_ABILITY_LABEL,
   HERO_COMBAT_STAT_CHOICES,
   HERO_COMBAT_STAT_LABEL,
-} from "../lib/questHero";
-import type { HeroAbilityChoice, HeroCombatStatChoice } from "../lib/questHero";
+} from "@warhost/opr-kit/core/questHero";
+import type { HeroAbilityChoice, HeroCombatStatChoice } from "@warhost/opr-kit/core/questHero";
 
 const STAT_LABEL: Record<HeroSkillStat, string> = {
   strength: "Str",

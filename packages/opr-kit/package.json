@@ -1,0 +1,10 @@
+{
+  "name": "@warhost/opr-kit",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Logica y vistas de ejercitos de One Page Rules, independientes del backend.",
+  "type": "module",
+  "exports": {
+    "./core/*": "./src/core/*.ts"
+  }
+}

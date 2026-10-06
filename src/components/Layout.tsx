@@ -2,8 +2,8 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useGameSystem } from "../context/GameSystemContext";
-import { SETTINGS, armyNounFor, isQuestSystem, systemsFor } from "../lib/gameSystems";
-import type { GameSystem, GameSystemId } from "../lib/gameSystems";
+import { SETTINGS, armyNounFor, isQuestSystem, systemsFor } from "@warhost/opr-kit/core/gameSystems";
+import type { GameSystem, GameSystemId } from "@warhost/opr-kit/core/gameSystems";
 
 function linksFor(system: GameSystem | null | undefined) {
   return [

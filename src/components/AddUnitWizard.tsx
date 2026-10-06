@@ -16,20 +16,21 @@ import {
   questGoldSpent,
   sectionsForUnit,
   toughOf,
-} from "../lib/builder";
-import type { BuilderEntry, UpgradeSection } from "../lib/builder";
-import { baseLoadout } from "../lib/loadout";
-import { habilidadesInicialesQuest, perfilInicialQuest, reglasInicialesQuest } from "../lib/questHero";
-import { questShopSectionsForEntry } from "../lib/questShop";
-import { armyNounFor, getGameSystem, isQuestSystem } from "../lib/gameSystems";
+} from "@warhost/opr-kit/core/builder";
+import type { BuilderEntry, UpgradeSection } from "@warhost/opr-kit/core/builder";
+import { baseLoadout } from "@warhost/opr-kit/core/loadout";
+import { habilidadesInicialesQuest, perfilInicialQuest, reglasInicialesQuest } from "@warhost/opr-kit/core/questHero";
+import { questShopSectionsForEntry } from "@warhost/opr-kit/core/questShop";
+import { armyNounFor, getGameSystem, isQuestSystem } from "@warhost/opr-kit/core/gameSystems";
 import { errorMessage } from "../lib/format";
-import type { HeroClass, HeroSkill, QuestShopPackage } from "../lib/types";
+import type { HeroClass, QuestShopPackage } from "../lib/types";
+import type { HeroSkill } from "@warhost/opr-kit/core/model";
 import { ErrorBanner, Spinner } from "./ui";
 import UnitCard from "./UnitCard";
 import RuleCardModal from "./RuleCardModal";
 import HeroSkillCard from "./HeroSkillCard";
 import type { HeroSkillCardData } from "./HeroSkillCard";
-import type { Habilidad } from "../lib/reglas";
+import type { Habilidad } from "@warhost/opr-kit/core/reglas";
 
 type Paso = "elegir" | "configurar" | "revisar";
 

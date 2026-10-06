@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useGameSystem } from "../../context/GameSystemContext";
 import { catalogImageUrl, groupImages, listBooks, listFactionImages, pickCover, targetKeyFor } from "../../api/catalog";
 import type { ArmyBook, CatalogImage } from "../../api/catalog";
-import { armyNounFor } from "../../lib/gameSystems";
+import { armyNounFor } from "@warhost/opr-kit/core/gameSystems";
 import { errorMessage } from "../../lib/format";
 import { EmptyState, ErrorBanner, PageHead, Spinner } from "../../components/ui";
 

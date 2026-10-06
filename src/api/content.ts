@@ -1,6 +1,6 @@
 import { Query, tables } from "../lib/appwrite";
 import { TABLES, env } from "../lib/env";
-import type { GameSystemId, Setting } from "../lib/gameSystems";
+import type { GameSystemId, Setting } from "@warhost/opr-kit/core/gameSystems";
 import type { HeroClass, Mission, QuestShopPackage, Rule } from "../lib/types";
 
 export async function listRules(setting: Setting): Promise<Rule[]> {
@@ -48,7 +48,7 @@ export async function listHeroClasses(gameSystem: GameSystemId): Promise<HeroCla
     tableId: TABLES.heroClasses,
     queries: [Query.equal("gameSystem", gameSystem), Query.orderAsc("sortOrder"), Query.limit(50)],
   });
-  return result.rows;
+  return result.rows.map(conId);
 }
 
 /** Equipamiento comun de tienda inicial Quest, compartido por cualquier heroe del sistema. */
@@ -79,12 +79,18 @@ export async function saveHeroClass(
     >
   >,
 ): Promise<HeroClass> {
-  return tables.updateRow<HeroClass>({
+  const row = await tables.updateRow<HeroClass>({
     databaseId: env.databaseId,
     tableId: TABLES.heroClasses,
     rowId: id,
     data: cambios,
   });
+  return conId(row);
+}
+
+/** El `id` neutro que lee `@warhost/opr-kit`: el de la fila de Appwrite. */
+function conId(row: HeroClass): HeroClass {
+  return { ...row, id: row.$id };
 }
 
 /** Filtra en memoria por titulo, cuerpo y etiquetas. */

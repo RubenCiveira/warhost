@@ -19,8 +19,8 @@ const bundle = async (entry, name) => {
   await build({ entryPoints: [entry], outfile, format: "esm", bundle: true, platform: "node", logLevel: "error" });
   return import(outfile);
 };
-const P = await bundle("src/lib/loadout.ts", "loadout.mjs");
-const B = await bundle("src/lib/builder.ts", "builder.mjs");
+const P = await bundle("packages/opr-kit/src/core/loadout.ts", "loadout.mjs");
+const B = await bundle("packages/opr-kit/src/core/builder.ts", "builder.mjs");
 
 const units = rows("army_units", [{ method: "equal", attribute: "bookKey", values: [BOOK] }, { method: "orderAsc", attribute: "sortOrder" }]);
 const packages = new Map(

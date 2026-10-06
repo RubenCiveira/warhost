@@ -1,9 +1,9 @@
 import { ID, Query, storage, tables } from "../lib/appwrite";
 import { TABLES, env } from "../lib/env";
-import type { GameSystemId, Setting } from "../lib/gameSystems";
+import type { GameSystemId, Setting } from "@warhost/opr-kit/core/gameSystems";
 import type { Row } from "../lib/types";
-import { parseSections } from "../lib/builder";
-import type { UpgradeSection } from "../lib/builder";
+import { parseSections } from "@warhost/opr-kit/core/builder";
+import type { UpgradeSection } from "@warhost/opr-kit/core/builder";
 
 export interface ArmyBook extends Row {
   uid: string;

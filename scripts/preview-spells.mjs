@@ -29,7 +29,7 @@ await build({
     contents: `
       import { renderToStaticMarkup } from "react-dom/server";
       import SpellCard from "./src/components/SpellCard";
-      import { parseSpells } from "./src/lib/spells";
+      import { parseSpells } from "./packages/opr-kit/src/core/spells";
       const SPELLS = parseSpells(${JSON.stringify(libro.spells)});
       globalThis.__HTML__ = SPELLS.map((s) =>
         renderToStaticMarkup(<SpellCard spell={s} faction={${JSON.stringify(libro.factionName || libro.name)}} />),

@@ -19,7 +19,7 @@ import { join } from "node:path";
 const CLI_CWD = process.env.APPWRITE_DIR ?? "../warhost-appwrite";
 const dir = await mkdtemp(join(tmpdir(), "warhost-recfg-"));
 const salida = join(dir, "builder.mjs");
-await build({ entryPoints: ["src/lib/builder.ts"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
+await build({ entryPoints: ["packages/opr-kit/src/core/builder.ts"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
 const B = await import(salida);
 
 const filas = (tabla, queries) =>

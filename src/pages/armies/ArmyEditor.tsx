@@ -3,8 +3,8 @@ import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useGameSystem } from "../../context/GameSystemContext";
-import { armyNounFor, getGameSystem, isQuestSystem, resumenFaccion } from "../../lib/gameSystems";
-import type { GameSystemId } from "../../lib/gameSystems";
+import { armyNounFor, getGameSystem, isQuestSystem, resumenFaccion } from "@warhost/opr-kit/core/gameSystems";
+import type { GameSystemId } from "@warhost/opr-kit/core/gameSystems";
 import {
   createArmy,
   deleteArmy,
@@ -23,10 +23,11 @@ import {
   listUrl,
   parseStoredList,
 } from "../../api/armyForge";
-import { requiredBookUids } from "../../lib/armyForgeResolve";
-import type { ArmyForgeList, ResolvedUnit } from "../../lib/armyForgeResolve";
-import type { Army, HeroClass, HeroSkill, QuestShopPackage } from "../../lib/types";
-import { parseHeroSkills } from "../../lib/types";
+import { requiredBookUids } from "@warhost/opr-kit/core/armyForgeResolve";
+import type { ArmyForgeList, ResolvedUnit } from "@warhost/opr-kit/core/armyForgeResolve";
+import type { Army, HeroClass, QuestShopPackage } from "../../lib/types";
+import type { HeroSkill } from "@warhost/opr-kit/core/model";
+import { parseHeroSkills } from "@warhost/opr-kit/core/model";
 import { errorMessage, formatDateTime } from "../../lib/format";
 import { EmptyState, ErrorBanner, Spinner } from "../../components/ui";
 import UnitCard from "../../components/UnitCard";
@@ -34,15 +35,15 @@ import HeroSkillCard from "../../components/HeroSkillCard";
 import type { HeroSkillCardData } from "../../components/HeroSkillCard";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import AddUnitWizard from "../../components/AddUnitWizard";
-import { buildArmy, entriesFromForgeList, esHeroe, rehydrateEntries, serializeEntries } from "../../lib/builder";
-import type { StoredEntry } from "../../lib/builder";
-import type { BuilderEntry, UpgradeSection } from "../../lib/builder";
+import { buildArmy, entriesFromForgeList, esHeroe, rehydrateEntries, serializeEntries } from "@warhost/opr-kit/core/builder";
+import type { StoredEntry } from "@warhost/opr-kit/core/builder";
+import type { BuilderEntry, UpgradeSection } from "@warhost/opr-kit/core/builder";
 import { catalogImageUrl, getBook, getBookByUid, groupImages, listBookImages, listBooks, listRuleGlossary, pickImageByType, targetKeyFor } from "../../api/catalog";
 import type { ArmyBook, ArmyUnit, CatalogImage, CatalogRule } from "../../api/catalog";
 import SpellCard from "../../components/SpellCard";
 import RuleCardModal from "../../components/RuleCardModal";
-import type { Habilidad } from "../../lib/reglas";
-import { parseHabilidad } from "../../lib/reglas";
+import type { Habilidad } from "@warhost/opr-kit/core/reglas";
+import { parseHabilidad } from "@warhost/opr-kit/core/reglas";
 import RuleCard from "../../components/RuleCard";
 import ArmyPrintView from "../../components/ArmyPrintView";
 import AvisoComposicion from "../../components/AvisoComposicion";
@@ -53,15 +54,15 @@ import {
   reglasGeneralesDeFaccion,
   reglasUsadasEnEjercito,
   tieneCaster,
-} from "../../lib/faccion";
-import { agruparUnidades, emparejarHeroes } from "../../lib/unidades";
+} from "@warhost/opr-kit/core/faccion";
+import { agruparUnidades, emparejarHeroes } from "@warhost/opr-kit/core/unidades";
 import { listUnits as listCatalogUnits, listUpgradePackages } from "../../api/catalog";
-import { habilidadesInicialesQuest } from "../../lib/questHero";
+import { habilidadesInicialesQuest } from "@warhost/opr-kit/core/questHero";
 import Tabs from "../../components/Tabs";
-import { parseSpells, reglasMencionadasEnHechizos } from "../../lib/spells";
+import { parseSpells, reglasMencionadasEnHechizos } from "@warhost/opr-kit/core/spells";
 import { composeArmyPayload, sourceBooks } from "../../lib/armyPayload";
 import { listHeroClasses, listQuestShopPackages } from "../../api/content";
-import { questShopSectionsForEntry } from "../../lib/questShop";
+import { questShopSectionsForEntry } from "@warhost/opr-kit/core/questShop";
 
 interface FormState {
   name: string;

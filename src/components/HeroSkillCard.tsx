@@ -1,7 +1,7 @@
 import { densidadScard } from "../lib/cardDensity";
 import TextoConReferencias from "./TextoConReferencias";
 import type { CatalogRule } from "../api/catalog";
-import type { Habilidad } from "../lib/reglas";
+import type { Habilidad } from "@warhost/opr-kit/core/reglas";
 
 export interface HeroSkillCardData {
   name: string;

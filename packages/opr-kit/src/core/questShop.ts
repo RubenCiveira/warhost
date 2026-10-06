@@ -3,7 +3,7 @@ import type { BuilderEntry, UpgradeSection } from "./builder";
 import { isQuestSystem } from "./gameSystems";
 import type { GameSystemId } from "./gameSystems";
 import { reglasInicialesQuest } from "./questHero";
-import type { HeroClass, QuestShopPackage } from "./types";
+import type { HeroClass, QuestShopPackage } from "./model";
 
 export function questShopSectionsForEntry(
   entry: BuilderEntry,
@@ -14,7 +14,7 @@ export function questShopSectionsForEntry(
 ): UpgradeSection[] {
   if (!gameSystem || !isQuestSystem(gameSystem) || !esHeroe(entry.unit.rules)) return [];
 
-  const heroClass = entry.heroClassId ? heroClasses.find((candidate) => candidate.$id === entry.heroClassId) : undefined;
+  const heroClass = entry.heroClassId ? heroClasses.find((candidate) => candidate.id === entry.heroClassId) : undefined;
   const rules = reglasInicialesQuest(heroClass, entryRules(entry, baseSections));
   const tough = toughOf(entry.unit.rules);
   const hasCaster = rules.some((rule) => /^caster(?:\(\d+\))?$/i.test(rule.trim()));

@@ -37,8 +37,8 @@ const bundle = join(dir, "opciones.cjs");
 await build({
   stdin: {
     contents: `
-      const { desglosarOpcion } = require("./src/lib/opciones");
-      const { parseSections } = require("./src/lib/builder");
+      const { desglosarOpcion } = require("./packages/opr-kit/src/core/opciones");
+      const { parseSections } = require("./packages/opr-kit/src/core/builder");
       module.exports = { desglosarOpcion, parseSections };
     `,
     resolveDir: process.cwd(),

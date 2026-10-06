@@ -15,7 +15,7 @@ import {
   updateUnit,
 } from "../../api/games";
 import { listMissions } from "../../api/content";
-import { armyNounFor, getGameSystem } from "../../lib/gameSystems";
+import { armyNounFor, getGameSystem } from "@warhost/opr-kit/core/gameSystems";
 import type { Game, GamePlayer, GameResult, GameUnit, Mission } from "../../lib/types";
 import { parseTokens } from "../../lib/types";
 import { errorMessage } from "../../lib/format";

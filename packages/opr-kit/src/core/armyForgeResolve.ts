@@ -110,7 +110,7 @@ export interface ResolvedUnit {
   bookKey?: string;
   /** Nombre del tipo de unidad del catalogo, cuando `name` es un nombre propio de heroe. */
   unitTypeName?: string;
-  /** `$id` de `hero_classes` elegida. Solo en Star Quest / Fantasy Quest. */
+  /** `id` de la `HeroClass` elegida. Solo en Star Quest / Fantasy Quest. */
   heroClassId?: string;
   size: number;
   quality: number;

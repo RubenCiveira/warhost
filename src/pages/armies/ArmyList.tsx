@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useGameSystem } from "../../context/GameSystemContext";
 import { imageUrl, listArmies } from "../../api/armies";
 import { parseStoredList } from "../../api/armyForge";
-import { armyNounFor, resumenFaccion } from "../../lib/gameSystems";
+import { armyNounFor, resumenFaccion } from "@warhost/opr-kit/core/gameSystems";
 import type { Army } from "../../lib/types";
 import { errorMessage, formatDate } from "../../lib/format";
 import { EmptyState, ErrorBanner, PageHead, Spinner } from "../../components/ui";

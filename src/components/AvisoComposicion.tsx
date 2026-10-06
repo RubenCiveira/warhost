@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { verificacionesComposicion } from "../lib/composicion";
-import type { UnidadComposicion } from "../lib/composicion";
-import type { GameSystemId } from "../lib/gameSystems";
+import { verificacionesComposicion } from "@warhost/opr-kit/core/composicion";
+import type { UnidadComposicion } from "@warhost/opr-kit/core/composicion";
+import type { GameSystemId } from "@warhost/opr-kit/core/gameSystems";
 
 /**
  * El estado de composicion, repetido en la lista de ejercitos y en su ficha:

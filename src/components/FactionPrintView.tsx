@@ -1,18 +1,18 @@
 import { useMemo, useState } from "react";
 import { catalogImageUrl, groupImages, pickCover, pickImageByType, targetKeyFor } from "../api/catalog";
 import type { ArmyBook, ArmyUnit, CatalogImage, CatalogRule } from "../api/catalog";
-import { sectionsForUnit } from "../lib/builder";
-import type { UpgradeSection } from "../lib/builder";
-import type { ResolvedUnit } from "../lib/armyForgeResolve";
-import { baseLoadout } from "../lib/loadout";
-import { agruparUnidades } from "../lib/unidades";
-import { puedeTenerCaster } from "../lib/faccion";
-import { parseSpells, reglasMencionadasEnHechizos } from "../lib/spells";
+import { sectionsForUnit } from "@warhost/opr-kit/core/builder";
+import type { UpgradeSection } from "@warhost/opr-kit/core/builder";
+import type { ResolvedUnit } from "@warhost/opr-kit/core/armyForgeResolve";
+import { baseLoadout } from "@warhost/opr-kit/core/loadout";
+import { agruparUnidades } from "@warhost/opr-kit/core/unidades";
+import { puedeTenerCaster } from "@warhost/opr-kit/core/faccion";
+import { parseSpells, reglasMencionadasEnHechizos } from "@warhost/opr-kit/core/spells";
 import { FichaOpcionesLibro, FichaUnidadLibro } from "./ArmyPrintView";
 import LoreText from "./LoreText";
 import SpellCard from "./SpellCard";
 import RuleCard from "./RuleCard";
-import { parseHabilidad } from "../lib/reglas";
+import { parseHabilidad } from "@warhost/opr-kit/core/reglas";
 
 function unidadResuelta(unit: ArmyUnit): ResolvedUnit {
   return {
