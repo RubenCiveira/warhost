@@ -68,13 +68,25 @@ export function targetKeyFor(bookKey: string, unitId?: string | null): string {
   return unitId ? `unit:${bookKey}:${unitId}` : `faction:${bookKey}`;
 }
 
-export async function listBooks(gameSystem: GameSystemId): Promise<ArmyBook[]> {
+/**
+ * Lo que necesitan los listados de libros. Hechizos, trasfondo y reglas pesan
+ * casi todo el libro y solo hacen falta al abrir uno: eso es `getBook`.
+ */
+const CAMPOS_RESUMEN = ["$id", "name", "factionName", "uid", "gameSystem", "setting", "versionString", "unitCount", "coverImagePath"] as const;
+export type ArmyBookSummary = Pick<ArmyBook, (typeof CAMPOS_RESUMEN)[number]>;
+
+export async function listBooks(gameSystem: GameSystemId): Promise<ArmyBookSummary[]> {
   const result = await tables.listRows<ArmyBook>({
     databaseId: env.databaseId,
     tableId: TABLES.armyBooks,
-    queries: [Query.equal("gameSystem", gameSystem), Query.orderAsc("name"), Query.limit(200)],
+    queries: [
+      Query.equal("gameSystem", gameSystem),
+      Query.orderAsc("name"),
+      Query.limit(200),
+      Query.select([...CAMPOS_RESUMEN]),
+    ],
   });
-  return result.rows.map(libroConId);
+  return result.rows;
 }
 
 export async function getBook(bookKey: string): Promise<ArmyBook> {

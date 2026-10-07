@@ -6,6 +6,7 @@ import { SETTINGS, armyNounFor, isQuestSystem, systemsFor } from "@rubenciveira/
 import type { GameSystem, GameSystemId } from "@rubenciveira/opr-kit/core/gameSystems";
 import { listArmies } from "../api/armies";
 import { reintentar, useCobertura } from "../lib/cobertura";
+import { Spinner } from "./ui";
 
 // Al inicio se vuelve con el logo. Partidas, asociaciones y reglas estan
 // ocultas por ahora: sus rutas siguen en App.tsx, pero no se enlazan.
@@ -225,8 +226,9 @@ export default function Layout() {
             </button>
           </div>
         )}
-        {/* Cada pagina es un trozo aparte: se descarga al entrar en ella. */}
-        <Suspense fallback={<p className="muted small">Cargando…</p>}>
+        {/* Cada pagina es un trozo aparte: se descarga al entrar en ella. El
+            mismo spinner que pintan las paginas al cargar, para no mover nada. */}
+        <Suspense fallback={<Spinner />}>
           <Outlet />
         </Suspense>
       </main>

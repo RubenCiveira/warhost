@@ -40,7 +40,7 @@ import { planDeMigracion } from "@rubenciveira/opr-kit/core/migracion";
 import type { StoredEntry } from "@rubenciveira/opr-kit/core/builder";
 import type { BuilderEntry, UpgradeSection } from "@rubenciveira/opr-kit/core/builder";
 import { catalogImageUrl, getBook, getBookByUid, groupImages, listBookImages, listBooks, listRuleGlossary, pickImageByType, targetKeyFor } from "../../api/catalog";
-import type { ArmyBook, ArmyUnit, CatalogImage, CatalogRule } from "../../api/catalog";
+import type { ArmyBook, ArmyBookSummary, ArmyUnit, CatalogImage, CatalogRule } from "../../api/catalog";
 import SpellCard from "@rubenciveira/opr-kit/react/SpellCard";
 import RuleCardModal from "../../components/RuleCardModal";
 import ModoPartida from "../../components/ModoPartida";
@@ -187,7 +187,7 @@ export default function ArmyEditor() {
    * Reabierta desde la barra ya se sabe, y basta con poder cerrarla.
    */
   const [decidirBorrador, setDecidirBorrador] = useState<"entrada" | "peticion" | null>(null);
-  const [faccionesDisponibles, setFaccionesDisponibles] = useState<ArmyBook[]>([]);
+  const [faccionesDisponibles, setFaccionesDisponibles] = useState<ArmyBookSummary[]>([]);
   const [cargandoFacciones, setCargandoFacciones] = useState(false);
 
   useEffect(() => {
@@ -825,12 +825,13 @@ export default function ArmyEditor() {
     return faccionesDisponibles.filter((libro) => [libro.name, libro.factionName ?? ""].some((texto) => texto.toLowerCase().includes(needle)));
   }, [faccionesDisponibles, filtroFaccion]);
 
-  function seleccionarFaccion(libro: ArmyBook) {
+  function seleccionarFaccion(libro: ArmyBookSummary) {
     setFacSeleccionada(libro.$id);
     setTextoFaccion(libro.name);
     setFacAbierta(false);
     setFiltroFaccion("");
-    void registrarLibro(libro);
+    // El listado solo trae el resumen: el libro entero se pide al elegirlo.
+    void asegurarLibro(libro.$id);
   }
 
   /**

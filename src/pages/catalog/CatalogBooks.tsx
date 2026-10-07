@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useGameSystem } from "../../context/GameSystemContext";
 import { catalogImageUrl, groupImages, listBooks, listFactionImages, pickCover, targetKeyFor } from "../../api/catalog";
-import type { ArmyBook, CatalogImage } from "../../api/catalog";
+import type { ArmyBookSummary, CatalogImage } from "../../api/catalog";
 import { armyNounFor } from "@rubenciveira/opr-kit/core/gameSystems";
 import { errorMessage } from "../../lib/format";
 import { EmptyState, ErrorBanner, PageHead, Spinner } from "../../components/ui";
@@ -10,7 +10,7 @@ import { EmptyState, ErrorBanner, PageHead, Spinner } from "../../components/ui"
 /** Rejilla de facciones del modo de juego elegido. */
 export default function CatalogBooks() {
   const { system } = useGameSystem();
-  const [books, setBooks] = useState<ArmyBook[]>([]);
+  const [books, setBooks] = useState<ArmyBookSummary[]>([]);
   const [images, setImages] = useState<CatalogImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

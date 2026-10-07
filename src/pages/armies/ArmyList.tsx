@@ -5,7 +5,7 @@ import { useGameSystem } from "../../context/GameSystemContext";
 import { imageUrl, listArmies } from "../../api/armies";
 import { parseStoredList } from "../../api/armyForge";
 import { listBooks } from "../../api/catalog";
-import type { ArmyBook } from "../../api/catalog";
+import type { ArmyBookSummary } from "../../api/catalog";
 import { librosDesfasados } from "../../lib/armyPayload";
 import { armyNounFor, resumenFaccion } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { Army } from "../../lib/types";
@@ -23,7 +23,7 @@ export default function ArmyList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   /** Los libros de los sistemas listados, para saber que ejercitos se montaron con una version anterior. */
-  const [libros, setLibros] = useState<ArmyBook[]>([]);
+  const [libros, setLibros] = useState<ArmyBookSummary[]>([]);
 
   useEffect(() => {
     if (!user) return;
