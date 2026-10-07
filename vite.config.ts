@@ -32,7 +32,7 @@ export default defineConfig(({ command, mode }) => ({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png}"],
+        globPatterns: ["**/*.{js,css,html,svg,png,ttf}"],
         runtimeCaching: [
           {
             // Portadas y avatares: los ficheros de Appwrite no cambian de id
