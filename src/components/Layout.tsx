@@ -71,13 +71,13 @@ function ModeMenu() {
         className="ghost tiny menu-button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Cambiar modo de juego"
+        title="Cambiar modo de juego"
         onClick={(event) => {
           event.stopPropagation();
           setOpen((abierto) => !abierto);
         }}
       >
-        {system.short} ▾
+        {system.short} <span aria-hidden="true">▾</span>
       </button>
       {open ? (
         <div className="menu" role="menu">

@@ -288,18 +288,21 @@ export default function ArmyEditor() {
     }
   }
 
-  // Alimenta el buscador de faccion junto al boton de anadir.
+  // Alimenta el buscador de faccion junto al boton de anadir. Depende del
+  // sistema ya resuelto y no de sus dos fuentes: si no, al llegar el ejercito
+  // con el mismo sistema que el formulario se volvia a pedir el catalogo entero.
+  const sistemaFacciones = army?.gameSystem ?? form.gameSystem;
   useEffect(() => {
     let cancelado = false;
     setCargandoFacciones(true);
-    listBooks(army?.gameSystem ?? form.gameSystem)
+    listBooks(sistemaFacciones)
       .then((rows) => !cancelado && setFaccionesDisponibles(rows))
       .catch(() => !cancelado && setFaccionesDisponibles([]))
       .finally(() => !cancelado && setCargandoFacciones(false));
     return () => {
       cancelado = true;
     };
-  }, [army?.gameSystem, form.gameSystem]);
+  }, [sistemaFacciones]);
 
   useEffect(() => {
     if (!facAbierta) return undefined;
