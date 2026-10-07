@@ -12,6 +12,7 @@ export const env = {
   notifyFunctionId: import.meta.env.VITE_APPWRITE_NOTIFY_FUNCTION_ID ?? "notify_verified_user",
   armyForgeFunctionId: import.meta.env.VITE_APPWRITE_ARMY_FORGE_FUNCTION_ID ?? "army_forge_proxy",
   miniatureProxyFunctionId: import.meta.env.VITE_APPWRITE_MINIATURE_PROXY_FUNCTION_ID ?? "miniature_image_proxy",
+  syncBooksFunctionId: import.meta.env.VITE_APPWRITE_SYNC_BOOKS_FUNCTION_ID ?? "sync_army_books",
 } as const;
 
 export const TABLES = {

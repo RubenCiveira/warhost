@@ -15,12 +15,13 @@ import {
   pickCover,
   pickImageByType,
   setPrimaryImage,
+  refreshBookFromArmyForge,
   targetKeyFor,
   updateUnitLore,
   uploadCatalogImage,
 } from "../../api/catalog";
 import type { ArmyBook, ArmyUnit, CatalogImage, CatalogImageType, CatalogRule } from "../../api/catalog";
-import { errorMessage } from "../../lib/format";
+import { errorMessage, formatDateTime } from "../../lib/format";
 import { EmptyState, ErrorBanner, PageHead, Spinner } from "../../components/ui";
 import ImageUploader from "../../components/ImageUploader";
 import WarhubPicker from "../../components/WarhubPicker";
@@ -173,6 +174,8 @@ export default function CatalogBook() {
   const [unidadEditando, setUnidadEditando] = useState<ArmyUnit | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [actualizando, setActualizando] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -203,6 +206,30 @@ export default function CatalogBook() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /** Vuelve a traer el libro de Army Forge sin esperar a la ronda semanal. */
+  async function actualizarDesdeArmyForge() {
+    if (!book) return;
+    setActualizando(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await refreshBookFromArmyForge(book.$id);
+      const fresco = await getBook(book.$id);
+      // La funcion no descarga un libro que se acaba de volcar: si no ha
+      // cambiado la fecha, es eso, no que haya fallado.
+      setNotice(
+        fresco.syncedAt === book.syncedAt
+          ? "Ya estaba actualizado hace un momento: no se ha vuelto a descargar."
+          : `Actualizado desde Army Forge, version ${fresco.versionString ?? "sin numero"}.`,
+      );
+      await load();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setActualizando(false);
+    }
+  }
 
   const byTarget = useMemo(() => groupImages(images), [images]);
   // Cada faccion existe una vez por modo de juego, y su contenido difiere.
@@ -335,11 +362,22 @@ export default function CatalogBook() {
             <Link to={`/facciones/${book.$id}/crear`} className="button-link">
               Crear {armyNounFor(bookSystem).singular}
             </Link>
+            {editor ? (
+              <button
+                type="button"
+                disabled={actualizando}
+                title={`Ultima descarga: ${formatDateTime(book.syncedAt)}. Se actualiza solo cada semana.`}
+                onClick={() => void actualizarDesdeArmyForge()}
+              >
+                {actualizando ? "Actualizando…" : "Actualizar desde Army Forge"}
+              </button>
+            ) : null}
             <Link to="/facciones">Volver</Link>
           </>
         }
       />
       <ErrorBanner error={error} />
+      {notice ? <div className="banner ok">{notice}</div> : null}
       {system && system.id !== book.gameSystem ? (
         <div className="banner">
           Estas viendo la version de <strong>{bookSystem?.name ?? book.gameSystem}</strong> de esta faccion, pero tienes

@@ -1,4 +1,5 @@
-import { ID, Query, storage, tables } from "../lib/appwrite";
+import { ExecutionMethod, ExecutionStatus } from "appwrite";
+import { ID, Query, functions, storage, tables } from "../lib/appwrite";
 import { TABLES, env } from "../lib/env";
 import type { GameSystemId, Setting } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { Row } from "../lib/types";
@@ -99,6 +100,31 @@ export async function getBookByUid(uid: string, gameSystem: GameSystemId): Promi
   });
   const row = result.rows[0];
   return row ? libroConId(row) : null;
+}
+
+/**
+ * Vuelve a volcar un libro desde Army Forge, solo en su modo de juego. Va en
+ * asincrono porque las ejecuciones sincronas de Appwrite caducan a los 30
+ * segundos; se espera a que acabe para poder recargar la ficha despues. Solo
+ * pueden lanzarla los editores: lo aplica el permiso de la funcion.
+ */
+export async function refreshBookFromArmyForge(bookKey: string): Promise<void> {
+  const { $id: executionId } = await functions.createExecution({
+    functionId: env.syncBooksFunctionId,
+    xpath: `/?book=${encodeURIComponent(bookKey)}`,
+    method: ExecutionMethod.GET,
+    async: true,
+  });
+  const limite = Date.now() + 3 * 60 * 1000;
+  while (Date.now() < limite) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const execution = await functions.getExecution({ functionId: env.syncBooksFunctionId, executionId });
+    if (execution.status === ExecutionStatus.Completed) return;
+    if (execution.status === ExecutionStatus.Failed) {
+      throw new Error(execution.errors || "La actualizacion desde Army Forge ha fallado.");
+    }
+  }
+  throw new Error("La actualizacion sigue en marcha. Vuelve a cargar la ficha en un rato.");
 }
 
 /** El `id` neutro que lee `@rubenciveira/opr-kit`: el de la fila de Appwrite. */
