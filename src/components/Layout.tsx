@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useGameSystem } from "../context/GameSystemContext";
 import { SETTINGS, armyNounFor, isQuestSystem, systemsFor } from "@rubenciveira/opr-kit/core/gameSystems";
@@ -225,7 +225,10 @@ export default function Layout() {
             </button>
           </div>
         )}
-        <Outlet />
+        {/* Cada pagina es un trozo aparte: se descarga al entrar en ella. */}
+        <Suspense fallback={<p className="muted small">Cargando…</p>}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );

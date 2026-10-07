@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import RequireAccess from "./components/RequireAccess";
@@ -6,21 +7,21 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Verify from "./pages/Verify";
 import OAuth from "./pages/OAuth";
-import Home from "./pages/Home";
-import ArmyList from "./pages/armies/ArmyList";
-import ArmyEditor from "./pages/armies/ArmyEditor";
-import GameList from "./pages/games/GameList";
-import GameNew from "./pages/games/GameNew";
-import GameLive from "./pages/games/GameLive";
-import AssociationList from "./pages/associations/AssociationList";
-import AssociationDetail from "./pages/associations/AssociationDetail";
-import CatalogBooks from "./pages/catalog/CatalogBooks";
-import ArmyBuilder from "./pages/catalog/ArmyBuilder";
-import CatalogBook from "./pages/catalog/CatalogBook";
-import RulesIndex from "./pages/rules/RulesIndex";
-import MissionCards from "./pages/missions/MissionCards";
-import HeroClasses from "./pages/heroClasses/HeroClasses";
-import { MapLab } from "./modules/examples/debug";
+const Home = lazy(() => import("./pages/Home"));
+const ArmyList = lazy(() => import("./pages/armies/ArmyList"));
+const ArmyEditor = lazy(() => import("./pages/armies/ArmyEditor"));
+const GameList = lazy(() => import("./pages/games/GameList"));
+const GameNew = lazy(() => import("./pages/games/GameNew"));
+const GameLive = lazy(() => import("./pages/games/GameLive"));
+const AssociationList = lazy(() => import("./pages/associations/AssociationList"));
+const AssociationDetail = lazy(() => import("./pages/associations/AssociationDetail"));
+const CatalogBooks = lazy(() => import("./pages/catalog/CatalogBooks"));
+const ArmyBuilder = lazy(() => import("./pages/catalog/ArmyBuilder"));
+const CatalogBook = lazy(() => import("./pages/catalog/CatalogBook"));
+const RulesIndex = lazy(() => import("./pages/rules/RulesIndex"));
+const MissionCards = lazy(() => import("./pages/missions/MissionCards"));
+const HeroClasses = lazy(() => import("./pages/heroClasses/HeroClasses"));
+const MapLab = lazy(() => import("./modules/examples/debug/presentation/MapLab"));
 
 export default function App() {
   return (
@@ -29,7 +30,7 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/oauth" element={<OAuth />} />
-      <Route path="/maps" element={<main className="content"><MapLab /></main>} />
+      <Route path="/maps" element={<main className="content"><Suspense fallback={null}><MapLab /></Suspense></main>} />
       <Route
         element={
           <RequireAccess>
