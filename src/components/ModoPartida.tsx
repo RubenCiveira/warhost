@@ -5,7 +5,8 @@ import type { HeroSkillCardData } from "@rubenciveira/opr-kit/react/HeroSkillCar
 import { useTextos } from "@rubenciveira/opr-kit/react/textos";
 import { conValor, parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
 import type { Habilidad } from "@rubenciveira/opr-kit/core/reglas";
-import type { FilaEjercito, GrupoDeUnidades } from "@rubenciveira/opr-kit/core/unidades";
+import { agruparUnidades, separarFila } from "@rubenciveira/opr-kit/core/unidades";
+import type { FilaEjercito } from "@rubenciveira/opr-kit/core/unidades";
 import type { CatalogRule } from "../api/catalog";
 import ConfirmDialog from "./ConfirmDialog";
 
@@ -24,10 +25,15 @@ interface EstadoUnidad {
   desmoralizada?: boolean;
 }
 
-/** Una partida en curso: la ronda y los marcadores de cada unidad, por `FilaEjercito.key`. */
+/**
+ * Una partida en curso: la ronda, los marcadores de cada unidad por
+ * `FilaEjercito.key` y los heroes que se han separado de su unidad.
+ */
 interface Partida {
   ronda: number;
   unidades: Record<string, EstadoUnidad>;
+  /** Claves de las filas unidas que van por separado en esta partida. */
+  separadas?: string[];
 }
 
 /** Pixeles por milimetro CSS: las cartas miden en mm y el hueco en px. */
@@ -81,7 +87,7 @@ function leerPartida(armyId: string): Partida | null {
 export default function ModoPartida({
   armyId,
   nombre,
-  secciones,
+  filas: filasUnidas,
   quest,
   glosario,
   cartaDe,
@@ -89,19 +95,30 @@ export default function ModoPartida({
 }: {
   armyId: string;
   nombre: string;
-  /** Las unidades agrupadas como en la vista del ejercito, que es el orden de la mano. */
-  secciones: GrupoDeUnidades<FilaEjercito>[];
+  /** Las unidades con sus heroes unidos, como en la vista del ejercito. */
+  filas: FilaEjercito[];
   quest: boolean;
   glosario: Map<string, CatalogRule>;
   cartaDe: (fila: FilaEjercito, abrir: AbrirDesdeCarta) => ReactNode;
   onSalir: () => void;
 }) {
   const t = useTextos();
-  const filas = secciones.flatMap((seccion) => seccion.unidades);
+  const [partida, setPartida] = useState<Partida | null>(() => leerPartida(armyId));
+  // Un heroe separado y su unidad van como dos naipes, cada uno en su grupo y
+  // con sus marcadores. Cada mitad apunta a la fila unida para volver a juntarse.
+  const separadas = new Set(partida?.separadas ?? []);
+  const unidaDe = new Map<string, FilaEjercito>();
+  const filas = agruparUnidades(
+    filasUnidas.flatMap((fila) => {
+      if (!fila.adjunta || !separadas.has(fila.key)) return [fila];
+      const mitades = separarFila(fila);
+      for (const mitad of mitades) unidaDe.set(mitad.key, fila);
+      return mitades;
+    }),
+  ).flatMap((seccion) => seccion.unidades);
   const [claveActual, setClaveActual] = useState(filas[0]?.key ?? "");
   const [completa, setCompleta] = useState(Boolean(document.fullscreenElement));
   const [detalle, setDetalle] = useState<Detalle | null>(null);
-  const [partida, setPartida] = useState<Partida | null>(() => leerPartida(armyId));
   const [confirmandoFin, setConfirmandoFin] = useState(false);
   const [hueco, setHueco] = useState({ ancho: 0, alto: 0 });
   /** El de la mano, que no siempre es el de la carta: con partida, los marcadores le quitan ancho a esta. */
@@ -174,11 +191,57 @@ export default function ModoPartida({
     );
   }
 
+  /**
+   * Las heridas las encaja la unidad antes que el heroe: al separarse, ella se
+   * queda con las que aguante y el resto pasa al heroe. Activacion y
+   * desmoralizacion las comparten.
+   */
+  function separar(fila: FilaEjercito) {
+    const [heroe, unidad] = separarFila(fila);
+    if (!heroe || !unidad) return;
+    const estado = estadoDe(fila);
+    const heridas = estado.heridas ?? 0;
+    const heridasUnidad = Math.min(heridas, unidad.principal.maxWounds);
+    setPartida(
+      (previa) =>
+        previa && {
+          ...previa,
+          separadas: [...(previa.separadas ?? []), fila.key],
+          unidades: {
+            ...previa.unidades,
+            [heroe.key]: { ...estado, heridas: heridas - heridasUnidad },
+            [unidad.key]: { ...estado, heridas: heridasUnidad },
+          },
+        },
+    );
+  }
+
+  /** Al volver a unirse se suman las heridas; activada o desmoralizada si lo estaba cualquiera. */
+  function unir(fila: FilaEjercito) {
+    const [heroe, unidad] = separarFila(fila);
+    if (!heroe || !unidad) return;
+    const deHeroe = estadoDe(heroe);
+    const deUnidad = estadoDe(unidad);
+    setPartida((previa) => {
+      if (!previa) return previa;
+      const unidades = { ...previa.unidades };
+      delete unidades[unidad.key];
+      unidades[fila.key] = {
+        activada: Boolean(deHeroe.activada || deUnidad.activada),
+        heridas: (deHeroe.heridas ?? 0) + (deUnidad.heridas ?? 0),
+        desmoralizada: Boolean(deHeroe.desmoralizada || deUnidad.desmoralizada),
+      };
+      return { ...previa, separadas: previa.separadas?.filter((clave) => clave !== fila.key), unidades };
+    });
+    setClaveActual(fila.key);
+  }
+
   /** La ronda nueva quita las activaciones; heridas y desmoralizacion siguen. */
   function nuevaRonda() {
     setPartida(
       (previa) =>
         previa && {
+          ...previa,
           ronda: previa.ronda + 1,
           unidades: Object.fromEntries(
             Object.entries(previa.unidades).map(([clave, estado]) => [clave, { ...estado, activada: false }]),
@@ -238,6 +301,7 @@ export default function ModoPartida({
   const estadoActual = actual ? estadoDe(actual) : {};
   // Con un heroe unido el aguante es de dos perfiles distintos: no hay un tope unico.
   const heridasMax = actual && !actual.adjunta ? actual.principal.maxWounds : undefined;
+  const unidaActual = actual && unidaDe.get(actual.key);
 
   return (
     <div className="partida" role="dialog" aria-modal="true" aria-label={`Modo partida: ${nombre}`}>
@@ -341,6 +405,20 @@ export default function ModoPartida({
             >
               Desmoralizada
             </button>
+            {actual.adjunta ? (
+              <button type="button" title="El heroe y su unidad siguen por separado" onClick={() => separar(actual)}>
+                Separar
+              </button>
+            ) : null}
+            {unidaActual ? (
+              <button
+                type="button"
+                title={`Vuelve a unir ${nombreDe(unidaActual)}`}
+                onClick={() => unir(unidaActual)}
+              >
+                Volver a unir
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>

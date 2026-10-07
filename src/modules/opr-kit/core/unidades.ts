@@ -70,6 +70,9 @@ export interface FilaEjercito extends UnidadClasificable {
   indiceAdjunta?: number;
 }
 
+/** La clave de una unidad suelta en la lista, que la sigue entre recargas. */
+const claveDe = (unit: ResolvedUnit) => `${unit.unitKey ?? unit.name}-${unit.sortOrder}`;
+
 /**
  * Empareja cada heroe unido con su unidad: la unidad sale de su seccion y se
  * pinta dentro de la carta del heroe. `attachedTo` viene por indice en la lista
@@ -91,7 +94,7 @@ export function emparejarHeroes(
 
   return units.flatMap((unit, i) => {
     if (absorbidas.has(i)) return [];
-    const key = `${unit.unitKey ?? unit.name}-${unit.sortOrder}`;
+    const key = claveDe(unit);
     const destino = attachedTo[i];
     const adjunta =
       typeof destino === "number" && destino >= 0 && destino < units.length && destino !== i ? units[destino] : undefined;
@@ -111,4 +114,17 @@ export function emparejarHeroes(
       },
     ];
   });
+}
+
+/**
+ * Deshace una union: el heroe y su unidad vuelven a ser dos filas sueltas, con
+ * las mismas claves que tendrian sin unir. El heroe conserva la de la fila.
+ */
+export function separarFila(fila: FilaEjercito): FilaEjercito[] {
+  const { adjunta, indiceAdjunta, principal } = fila;
+  if (!adjunta || indiceAdjunta === undefined) return [fila];
+  return [
+    { key: fila.key, rules: principal.rules, size: principal.size, cost: principal.cost, principal, indice: fila.indice },
+    { key: claveDe(adjunta), rules: adjunta.rules, size: adjunta.size, cost: adjunta.cost, principal: adjunta, indice: indiceAdjunta },
+  ];
 }

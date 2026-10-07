@@ -24,7 +24,7 @@ const filas = (tabla, queries) =>
 const dir = await mkdtemp(join(tmpdir(), "warhost-uni-"));
 const salida = join(dir, "unidades.mjs");
 await build({ entryPoints: ["src/modules/opr-kit/core/unidades.ts"], outfile: salida, format: "esm", bundle: true, platform: "node", logLevel: "error" });
-const { grupoDeUnidad, agruparUnidades, emparejarHeroes } = await import(salida);
+const { grupoDeUnidad, agruparUnidades, emparejarHeroes, separarFila } = await import(salida);
 
 let fallos = 0;
 const comprobar = (ok, que, detalle) => {
@@ -76,6 +76,16 @@ comprobar(grupoDeUnidad(par) === "heroe", "el par se clasifica por el heroe");
 const secs = agruparUnidades(filas1);
 comprobar(secs[0].grupo === "heroe" && secs[0].unidades[0].adjunta, "el par va en Heroes");
 comprobar(secs[1].grupo === "base" && secs[1].unidades.length === 1, "la otra unidad suelta queda en Base");
+
+// --- Separar un par en partida deja las dos filas que habria sin unir.
+const sueltas = emparejarHeroes(lista, [undefined, undefined, undefined]);
+const mitades = separarFila(par);
+comprobar(
+  mitades.map((f) => f.key).join() === sueltas.slice(0, 2).map((f) => f.key).join() && mitades.every((f) => !f.adjunta),
+  "separar un par da el heroe y su unidad con sus claves de sueltos",
+  mitades.map((f) => f.key).join(),
+);
+comprobar(agruparUnidades(mitades).map((g) => g.grupo).join() === "heroe,base", "al separarse, cada uno vuelve a su grupo");
 
 // --- Sin uniones, una fila por unidad.
 comprobar(emparejarHeroes(lista, [undefined, undefined, undefined]).every((f) => !f.adjunta), "sin attachedTo, nada se empareja");

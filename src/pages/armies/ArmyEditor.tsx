@@ -1314,7 +1314,7 @@ export default function ArmyEditor() {
       <ModoPartida
         armyId={army.$id}
         nombre={form.name}
-        secciones={agruparUnidades(filasEjercito)}
+        filas={filasEjercito}
         quest={quest}
         glosario={glosario}
         cartaDe={(fila, abrir) => cartaDeFila(fila, abrir, false)}
