@@ -4,7 +4,7 @@ import type { ArmyBook, CatalogRule } from "../core/model";
 import type { ResolvedUnit } from "../core/armyForgeResolve";
 import type { LoadoutEntry } from "../core/loadout";
 import { equipoDeEjercito, reglasUsadasEnEjercito, tieneCaster } from "../core/faccion";
-import { agruparUnidades, emparejarHeroes } from "../core/unidades";
+import { agruparUnidades, emparejarHeroes, separarFila } from "../core/unidades";
 import type { FilaEjercito } from "../core/unidades";
 import { conValor, parseHabilidad } from "../core/reglas";
 import type { Habilidad } from "../core/reglas";
@@ -19,6 +19,7 @@ import {
   CEBRA,
   FILETE,
   ALTO_UTIL_MM,
+  FichaParPdf,
   FichaUnidadPdf,
   PAPEL,
   Pie,
@@ -26,6 +27,7 @@ import {
   TENUE,
   TINTA,
   altoLibroEstimadoMm,
+  altoParEstimadoMm,
   estilosDe,
   imagenesParaPdf,
   mm,
@@ -136,10 +138,12 @@ export async function generarPdfEjercito(opciones: OpcionesPdfEjercito): Promise
 // ── Modo libro ───────────────────────────────────────────────────────────────
 
 function libro(
-  { nombre, noun, units, glosario, librosConocidos, puedeLanzarHechizos, t, ambientacion }: OpcionesPdfEjercito,
+  { nombre, noun, units, entradasAttachedTo, glosario, librosConocidos, puedeLanzarHechizos, t, ambientacion }: OpcionesPdfEjercito,
   avatarDe: (unit: ResolvedUnit) => string | null,
 ) {
   const s = estilosDe(TEMAS[ambientacion]);
+  // Un heroe unido va en la misma ficha que su unidad, en el bloque de su faccion.
+  const filas = emparejarHeroes(units, entradasAttachedTo);
   const titulo = nombre || noun.singular;
   const defaultBookKey = librosConocidos.length === 1 ? librosConocidos[0].id : undefined;
   const libroDe = (unit: ResolvedUnit) => librosConocidos.find((libro) => (unit.bookKey ?? defaultBookKey) === libro.id);
@@ -159,26 +163,34 @@ function libro(
         <Text style={s.resumen}>{resumen(t, units)}</Text>
         {units.length === 0 ? <Text style={s.vacio}>{t.sinUnidades(noun)}</Text> : null}
         {bloques.map((bloque) => {
-          const fichas = agruparUnidades(bloque.units)
+          const fichas = agruparUnidades(filas.filter((fila) => bloque.units.includes(fila.principal)))
             .flatMap((seccion) => seccion.unidades)
-            .map((unit) => {
+            .map(({ key, principal: unit, adjunta }) => {
               const libroUnidad = libroDe(unit);
-              const lanza = libroUnidad && (puedeLanzarHechizos?.(unit) ?? tieneCaster([unit]));
+              const lanza = libroUnidad && [unit, adjunta].some((una) => una && (puedeLanzarHechizos?.(una) ?? tieneCaster([una])));
               const hechizos = lanza ? parseSpells(libroUnidad.spells ?? null) : [];
-              return {
-                cabe: altoLibroEstimadoMm(unit, glosario, hechizos) <= ALTO_UTIL_MM,
-                ficha: (
-                  <FichaUnidadPdf
-                    key={`${unit.unitKey ?? unit.name}-${unit.sortOrder}`}
-                    s={s}
-                    t={t}
-                    unit={unit}
-                    glosario={glosario}
-                    hechizos={hechizos}
-                    avatar={avatarDe(unit)}
-                  />
-                ),
-              };
+              return adjunta
+                ? {
+                    cabe: altoParEstimadoMm(unit, adjunta, glosario, hechizos) <= ALTO_UTIL_MM,
+                    ficha: (
+                      <FichaParPdf
+                        key={key}
+                        s={s}
+                        t={t}
+                        heroe={unit}
+                        unidad={adjunta}
+                        glosario={glosario}
+                        hechizos={hechizos}
+                        avatar={avatarDe(unit)}
+                      />
+                    ),
+                  }
+                : {
+                    cabe: altoLibroEstimadoMm(unit, glosario, hechizos) <= ALTO_UTIL_MM,
+                    ficha: (
+                      <FichaUnidadPdf key={key} s={s} t={t} unit={unit} glosario={glosario} hechizos={hechizos} avatar={avatarDe(unit)} />
+                    ),
+                  };
             });
           // El nombre de cada faccion aliada salta de pagina con su primera
           // ficha: nunca se queda solo al pie.
@@ -906,7 +918,12 @@ function tarjetas(
 ) {
   const tema = TEMAS[ambientacion];
   const cx: Contexto = { c: estilosCartas(tema), t, tema, ambientacion, glosario };
-  const filas = emparejarHeroes(units, entradasAttachedTo);
+  // Detras de cada heroe unido van tambien su carta y la de su unidad sueltas,
+  // por si se separan en partida. La del heroe suelto lleva otra clave que la
+  // del par, que es la suya.
+  const filas = emparejarHeroes(units, entradasAttachedTo).flatMap((fila) =>
+    fila.adjunta ? [fila, ...separarFila(fila).map((suelta) => ({ ...suelta, key: `${suelta.key}-suelta` }))] : [fila],
+  );
   const cartas = cartasDe(glosario, units, librosConocidos, puedeLanzarHechizos);
   return (
     <Document title={nombre || noun.singular}>

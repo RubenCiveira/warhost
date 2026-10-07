@@ -51,6 +51,10 @@ export interface Textos {
   notas: string;
   mejoras: string;
   elMandoAporta: string;
+  /** De quien es cada regla en la ficha de un heroe unido. */
+  soloHeroe: string;
+  soloUnidad: string;
+  soloUnidos: string;
   liderazgo: string;
   armasOcultas: (cuantas: number) => string;
   // Opciones de configuracion.
@@ -134,6 +138,9 @@ export const es: Textos = {
   notas: "Notas",
   mejoras: "Mejoras",
   elMandoAporta: "El mando aporta",
+  soloHeroe: "sólo héroe",
+  soloUnidad: "sólo unidad",
+  soloUnidos: "sólo unidos",
   liderazgo: "Liderazgo",
   armasOcultas: (cuantas) => `y ${cuantas} arma${cuantas === 1 ? "" : "s"} mas, en el detalle de la unidad`,
   opciones: "Opciones",
@@ -212,6 +219,9 @@ export const en: Textos = {
   notas: "Notes",
   mejoras: "Upgrades",
   elMandoAporta: "Leader grants",
+  soloHeroe: "hero only",
+  soloUnidad: "unit only",
+  soloUnidos: "joined only",
   liderazgo: "Leadership",
   armasOcultas: (cuantas) => `and ${cuantas} more weapon${cuantas === 1 ? "" : "s"}, in the unit details`,
   opciones: "Options",

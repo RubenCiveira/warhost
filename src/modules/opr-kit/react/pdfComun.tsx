@@ -14,6 +14,7 @@ import { reglasMencionadasEnHechizos } from "../core/spells";
 import type { Spell } from "../core/spells";
 import { PAGINA_MM } from "../core/print";
 import type { Textos } from "./textos";
+import { aportesDelHeroe } from "./UnitCard";
 
 /**
  * Lo comun a los PDF de faccion y de ejercito, dibujados como texto con
@@ -239,6 +240,10 @@ export function estilosDe(tema: Tema) {
     num: { textAlign: "center" },
     vacio: { color: TENUE },
     reglaParrafo: { marginBottom: mm(1) },
+    par: { flexDirection: "row", gap: mm(2.5) },
+    parColumna: { flex: 1, gap: mm(1.6) },
+    parNombre: { ...rotulo, fontSize: mm(3) },
+    parPerfil: { color: TENUE, fontWeight: 600 },
     seccion: { ...rotulo, fontSize: mm(5.5), marginTop: mm(2), marginBottom: mm(3) },
   });
 }
@@ -378,21 +383,31 @@ export function altoLibroEstimadoMm(unit: PerfilLibro, glosario: Map<string, Cat
   return 22 + armas.length * 8 + filasArmas * 4.1 + unit.rules.length * 7 + filasReglas * 4.1 + equipo.length * 7 + filasEquipo * 4.1 + hechizos.length * 7 + filasHechizos * 4.1 + (unit.notes ? lineasDeTexto(unit.notes, 110) * 4.1 + 8 : 0);
 }
 
-function Cabecera({ s, t, unit, miniatura, avatar }: { s: Estilos; t: Textos; unit: PerfilLibro; miniatura: boolean; avatar: string | null }) {
-  const atributos: Array<[string, string]> = [
-    [t.calidad, `${unit.quality}+`],
-    [t.defensa, `${unit.defense}+`],
-    ...(unit.maxWounds !== undefined ? ([[t.heridas, String(unit.maxWounds)]] as Array<[string, string]>) : []),
-    [t.puntos, String(unit.cost)],
-  ];
+/** El nombre con sus miniaturas si son varias: "Battle Brothers (5)". */
+const nombreConTamano = (unit: PerfilLibro) => `${unit.name}${unit.size > 1 ? ` (${unit.size})` : ""}`;
+
+function Cabecera({
+  s,
+  t,
+  nombre,
+  combinada,
+  atributos,
+  miniatura,
+  avatar,
+}: {
+  s: Estilos;
+  t: Textos;
+  nombre: string;
+  combinada: boolean;
+  atributos: Array<[string, string]>;
+  miniatura: boolean;
+  avatar: string | null;
+}) {
   return (
     <View style={miniatura ? [s.cabecera, s.cabeceraConMiniatura] : s.cabecera}>
       <View style={miniatura ? [s.nombre, s.nombreConMiniatura] : s.nombre}>
-        <Text>
-          {unit.name}
-          {unit.size > 1 ? ` (${unit.size})` : ""}
-        </Text>
-        {unit.combined ? <Text style={s.combinada}>{t.combinada}</Text> : null}
+        <Text>{nombre}</Text>
+        {combinada ? <Text style={s.combinada}>{t.combinada}</Text> : null}
       </View>
       {avatar ? <Image style={s.avatar} src={avatar} /> : null}
       {atributos.map(([clave, valor], indice) => (
@@ -448,6 +463,12 @@ export function FichaUnidadPdf({
   const equipo = unit.loadout.filter((entrada) => entrada.kind === "gear");
   const yaTiene = (nombre: string) => unit.rules.some((regla) => parseHabilidad(regla, "regla").nombre.toLowerCase() === nombre.toLowerCase());
   const reglas = [...unit.rules, ...reglasMencionadasEnHechizos(glosario, hechizos).map((regla) => regla.name).filter((nombre) => !yaTiene(nombre))];
+  const atributos: Array<[string, string]> = [
+    [t.calidad, `${unit.quality}+`],
+    [t.defensa, `${unit.defense}+`],
+    ...(unit.maxWounds !== undefined ? ([[t.heridas, String(unit.maxWounds)]] as Array<[string, string]>) : []),
+    [t.puntos, String(unit.cost)],
+  ];
   const reglasDe = (entradas: LoadoutEntry[]) =>
     entradas.map((entrada, indice) => ({ key: `${entrada.name}-${indice}`, entrada, reglas: <ReglasTexto s={s} etiquetas={entrada.rules} glosario={glosario} /> }));
   const cabeEnUnaPagina = altoLibroEstimadoMm(unit, glosario, hechizos) <= ALTO_UTIL_MM;
@@ -455,7 +476,15 @@ export function FichaUnidadPdf({
   return (
     <View style={s.ficha} wrap={!cabeEnUnaPagina}>
       {miniatura ? <Image style={s.miniatura} src={miniatura} /> : null}
-      <Cabecera s={s} t={t} unit={unit} miniatura={Boolean(miniatura)} avatar={avatar} />
+      <Cabecera
+        s={s}
+        t={t}
+        nombre={nombreConTamano(unit)}
+        combinada={Boolean(unit.combined)}
+        atributos={atributos}
+        miniatura={Boolean(miniatura)}
+        avatar={avatar}
+      />
       <View style={s.cuerpo}>
         {lore ? <Lore s={s} texto={lore} estilo={s.loreUnidad} /> : null}
         {armas.length > 0 ? (
@@ -480,21 +509,7 @@ export function FichaUnidadPdf({
             />
           </Bloque>
         ) : null}
-        {reglas.length > 0 ? (
-          <Bloque s={s} titulo={t.reglas}>
-            <Tabla
-              s={s}
-              columnas={[
-                { titulo: t.regla, ancho: "24%" },
-                { titulo: t.texto, ancho: "76%" },
-              ]}
-              filas={reglas.map((etiqueta) => {
-                const { nombre, texto } = textoDeRegla(etiqueta, glosario);
-                return { key: etiqueta, celdas: [nombre, texto ?? <Text style={s.vacio}>—</Text>] };
-              })}
-            />
-          </Bloque>
-        ) : null}
+        {reglas.length > 0 ? <BloqueReglas s={s} t={t} reglas={reglas} glosario={glosario} /> : null}
         {equipo.length > 0 ? (
           <Bloque s={s} titulo={t.equipo}>
             <Tabla
@@ -520,6 +535,218 @@ export function FichaUnidadPdf({
             <Text style={s.etiqueta}>{t.notas} </Text>
             {unit.notes}
           </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+/** Las reglas con su texto a todo lo ancho, una por fila. El matiz va tras el
+ *  nombre, entre parentesis: de quien es la regla en la ficha del par. */
+function BloqueReglas({
+  s,
+  t,
+  reglas,
+  glosario,
+  matizDe,
+}: {
+  s: Estilos;
+  t: Textos;
+  reglas: string[];
+  glosario: Map<string, CatalogRule>;
+  matizDe?: (etiqueta: string) => string | null;
+}) {
+  return (
+    <Bloque s={s} titulo={t.reglas}>
+      <Tabla
+        s={s}
+        columnas={[
+          { titulo: t.regla, ancho: "24%" },
+          { titulo: t.texto, ancho: "76%" },
+        ]}
+        filas={reglas.map((etiqueta) => {
+          const { nombre, texto } = textoDeRegla(etiqueta, glosario);
+          const matiz = matizDe?.(etiqueta);
+          return {
+            key: etiqueta,
+            celdas: [
+              matiz ? (
+                <Text style={s.colNombre}>
+                  {nombre} <Text style={s.vacio}>({matiz})</Text>
+                </Text>
+              ) : (
+                nombre
+              ),
+              texto ?? <Text style={s.vacio}>—</Text>,
+            ],
+          };
+        })}
+      />
+    </Bloque>
+  );
+}
+
+/** Las etiquetas sin repetir, en el orden en que llegan. */
+function sinRepetir(etiquetas: string[]): string[] {
+  const vistas = new Set<string>();
+  return etiquetas.filter((etiqueta) => {
+    const clave = etiqueta.trim().toLowerCase();
+    if (vistas.has(clave)) return false;
+    vistas.add(clave);
+    return true;
+  });
+}
+
+/** Lo que el heroe le presta a la unidad mientras van unidos. */
+const aportesDelPar = (heroe: PerfilLibro, unidad: PerfilLibro, glosario: Map<string, CatalogRule>) =>
+  aportesDelHeroe(heroe, heroe.loadout, unidad, glosario);
+
+/** Todas las reglas del par, sin repetir: las propias de cada uno, las de sus
+ *  armas y equipo, las que el heroe presta a la unidad y las que mencionan
+ *  sus hechizos. */
+function reglasDelPar(heroe: PerfilLibro, unidad: PerfilLibro, glosario: Map<string, CatalogRule>, hechizos: Spell[]): string[] {
+  return sinRepetir([
+    ...heroe.rules,
+    ...unidad.rules,
+    ...[...heroe.loadout, ...unidad.loadout].flatMap((entrada) => entrada.rules),
+    ...aportesDelPar(heroe, unidad, glosario).map((aporte) => aporte.concede.etiqueta),
+    ...reglasMencionadasEnHechizos(glosario, hechizos).map((regla) => regla.name),
+  ]);
+}
+
+/** Lo que medira la ficha del par, a ojo y por lo alto: como si heroe y unidad
+ *  fueran una sola ficha, aunque sus tablas vayan lado a lado. */
+export function altoParEstimadoMm(heroe: PerfilLibro, unidad: PerfilLibro, glosario: Map<string, CatalogRule>, hechizos: Spell[]): number {
+  return altoLibroEstimadoMm(
+    {
+      ...heroe,
+      rules: reglasDelPar(heroe, unidad, glosario, hechizos),
+      loadout: [...heroe.loadout, ...unidad.loadout],
+      notes: [heroe.notes, unidad.notes].filter(Boolean).join(" "),
+    },
+    glosario,
+    hechizos,
+  );
+}
+
+/** Media ficha del par: perfil, reglas, armas y equipo de uno de los dos, con
+ *  las reglas solo nombradas. Su texto va debajo, a todo lo ancho. */
+function ColumnaPar({ s, t, unit }: { s: Estilos; t: Textos; unit: PerfilLibro }) {
+  const armas = unit.loadout.filter((entrada) => entrada.kind === "weapon");
+  const equipo = unit.loadout.filter((entrada) => entrada.kind === "gear");
+  const nombreEntrada = (entrada: LoadoutEntry) => `${entrada.count > 1 ? `${entrada.count}× ` : ""}${entrada.name}`;
+  const etiquetas = (entrada: LoadoutEntry) => (entrada.rules.length > 0 ? entrada.rules.join(", ") : <Text style={s.vacio}>—</Text>);
+  return (
+    <View style={s.parColumna}>
+      <View>
+        <Text style={s.parNombre}>{nombreConTamano(unit)}</Text>
+        <Text style={s.parPerfil}>
+          {[
+            `${t.calidad} ${unit.quality}+`,
+            `${t.defensa} ${unit.defense}+`,
+            ...(unit.maxWounds !== undefined ? [`${t.heridas} ${unit.maxWounds}`] : []),
+            `${t.puntos} ${unit.cost}`,
+          ].join(" · ")}
+        </Text>
+        {unit.rules.length > 0 ? <Text>{unit.rules.join(", ")}</Text> : null}
+      </View>
+      {armas.length > 0 ? (
+        <Tabla
+          s={s}
+          columnas={[
+            { titulo: t.arma, ancho: "36%" },
+            { titulo: t.alcance, ancho: "14%", num: true },
+            { titulo: t.ataques, ancho: "14%", num: true },
+            { titulo: t.reglas, ancho: "36%" },
+          ]}
+          filas={armas.map((entrada, indice) => ({
+            key: `${entrada.name}-${indice}`,
+            celdas: [nombreEntrada(entrada), entrada.range ? `${entrada.range}"` : t.cuerpoACuerpo, `A${entrada.attacks}`, etiquetas(entrada)],
+          }))}
+        />
+      ) : null}
+      {equipo.length > 0 ? (
+        <Tabla
+          s={s}
+          columnas={[
+            { titulo: t.equipo, ancho: "50%" },
+            { titulo: t.concede, ancho: "50%" },
+          ]}
+          filas={equipo.map((entrada, indice) => ({ key: `${entrada.name}-${indice}`, celdas: [nombreEntrada(entrada), etiquetas(entrada)] }))}
+        />
+      ) : null}
+      {unit.notes ? (
+        <Text style={s.notas}>
+          <Text style={s.etiqueta}>{t.notas} </Text>
+          {unit.notes}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * La ficha de libro de un heroe unido a una unidad, como su carta: el heroe a
+ * la izquierda y la unidad a la derecha, y debajo, a todo lo ancho, el texto
+ * de todas las reglas de los dos y los hechizos. Se parte entre paginas igual
+ * que la ficha de una unidad.
+ */
+export function FichaParPdf({
+  s,
+  t,
+  heroe,
+  unidad,
+  glosario,
+  hechizos,
+  avatar = null,
+}: {
+  s: Estilos;
+  t: Textos;
+  heroe: PerfilLibro;
+  unidad: PerfilLibro;
+  glosario: Map<string, CatalogRule>;
+  hechizos: Spell[];
+  avatar?: string | null;
+}) {
+  const reglas = reglasDelPar(heroe, unidad, glosario, hechizos);
+  // De quien es cada regla, por si el heroe se separa o cae: sin matiz, la
+  // tienen los dos; lo que el heroe presta a la unidad solo vale unidos.
+  const propias = (unit: PerfilLibro) =>
+    new Set([...unit.rules, ...unit.loadout.flatMap((entrada) => entrada.rules)].map((etiqueta) => etiqueta.trim().toLowerCase()));
+  const delHeroe = propias(heroe);
+  const deLaUnidad = propias(unidad);
+  const prestadas = new Set(aportesDelPar(heroe, unidad, glosario).map((aporte) => aporte.concede.etiqueta.trim().toLowerCase()));
+  const matizDe = (etiqueta: string) => {
+    const clave = etiqueta.trim().toLowerCase();
+    if (delHeroe.has(clave) && deLaUnidad.has(clave)) return null;
+    if (delHeroe.has(clave)) return t.soloHeroe;
+    if (deLaUnidad.has(clave)) return t.soloUnidad;
+    return prestadas.has(clave) ? t.soloUnidos : null;
+  };
+  return (
+    <View style={s.ficha} wrap={altoParEstimadoMm(heroe, unidad, glosario, hechizos) > ALTO_UTIL_MM}>
+      <Cabecera
+        s={s}
+        t={t}
+        nombre={`${heroe.name} + ${nombreConTamano(unidad)}`}
+        combinada={Boolean(heroe.combined || unidad.combined)}
+        atributos={[
+          [t.miniaturas, String(heroe.size + unidad.size)],
+          [t.puntos, String(heroe.cost + unidad.cost)],
+        ]}
+        miniatura={false}
+        avatar={avatar}
+      />
+      <View style={s.cuerpo}>
+        <View style={s.par}>
+          <ColumnaPar s={s} t={t} unit={heroe} />
+          <ColumnaPar s={s} t={t} unit={unidad} />
+        </View>
+        {reglas.length > 0 ? <BloqueReglas s={s} t={t} reglas={reglas} glosario={glosario} matizDe={matizDe} /> : null}
+        {hechizos.length > 0 ? (
+          <Bloque s={s} titulo={t.hechizos}>
+            <TablaHechizos s={s} t={t} hechizos={hechizos} />
+          </Bloque>
         ) : null}
       </View>
     </View>
