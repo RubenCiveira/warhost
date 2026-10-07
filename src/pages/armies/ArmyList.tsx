@@ -4,6 +4,9 @@ import { useAuth } from "../../context/AuthContext";
 import { useGameSystem } from "../../context/GameSystemContext";
 import { imageUrl, listArmies } from "../../api/armies";
 import { parseStoredList } from "../../api/armyForge";
+import { listBooks } from "../../api/catalog";
+import type { ArmyBook } from "../../api/catalog";
+import { librosDesfasados } from "../../lib/armyPayload";
 import { armyNounFor, resumenFaccion } from "@rubenciveira/opr-kit/core/gameSystems";
 import type { Army } from "../../lib/types";
 import { errorMessage, formatDate } from "../../lib/format";
@@ -19,6 +22,8 @@ export default function ArmyList() {
   const [allSystems, setAllSystems] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** Los libros de los sistemas listados, para saber que ejercitos se montaron con una version anterior. */
+  const [libros, setLibros] = useState<ArmyBook[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -32,6 +37,18 @@ export default function ArmyList() {
       cancelled = true;
     };
   }, [user, system, allSystems, cobertura]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const sistemas = [...new Set(armies.map((army) => army.gameSystem))];
+    // Sin cobertura no hay catalogo que consultar: simplemente no se marca nada.
+    Promise.all(sistemas.map((sistema) => listBooks(sistema)))
+      .then((porSistema) => !cancelled && setLibros(porSistema.flat()))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [armies]);
 
   const noun = allSystems ? armyNounFor(null) : armyNounFor(system);
 
@@ -96,6 +113,11 @@ export default function ArmyList() {
                     pointsLimit={army.pointsLimit}
                     pointsMargin={army.pointsMargin}
                   />
+                  {librosDesfasados(army.listJson, libros.filter((libro) => libro.gameSystem === army.gameSystem)).length > 0 ? (
+                    <span className="tag accent" title="Montado con una version anterior del libro: abre la ficha para ver que cambia">
+                      Libro actualizado
+                    </span>
+                  ) : null}
                   <span className="tag">{army.gameSystem.toUpperCase()}</span>
                 </span>
               </div>

@@ -59,6 +59,47 @@ export function sourceBooks(listJson: string | null | undefined): SourceBook[] {
   }
 }
 
+export interface LibroDesfasado {
+  bookKey: string;
+  /** El del libro, no el de la faccion: "Wolf Brothers", no "Battle Brothers". */
+  nombre: string;
+  guardada: string;
+  actual: string;
+}
+
+/**
+ * Los libros de la lista que han cambiado de version desde que se monto. La
+ * version guardada sale de `source.books`; una lista importada de Army Forge
+ * no lo trae, pero su JSON original apunta la version de cada libro por uid en
+ * `details.armyVersions`. Sin version guardada no se puede saber, y no se
+ * marca: mas vale callar que avisar de algo que no se sabe.
+ */
+export function librosDesfasados(
+  listJson: string | null | undefined,
+  libros: Array<LibroDeOrigen & { uid: string }>,
+): LibroDesfasado[] {
+  const porClave = new Map(libros.map((libro) => [libro.$id, libro]));
+  let guardadas = sourceBooks(listJson).map(({ bookKey, bookVersion }) => ({ libro: porClave.get(bookKey), bookVersion }));
+  if (guardadas.length === 0 && listJson) {
+    try {
+      const parsed = JSON.parse(listJson) as {
+        raw?: { details?: { armyVersions?: Array<{ armyId?: string; version?: string }> } };
+      };
+      guardadas = (parsed.raw?.details?.armyVersions ?? []).map(({ armyId, version }) => ({
+        libro: libros.find((libro) => libro.uid === armyId),
+        bookVersion: version ?? null,
+      }));
+    } catch {
+      return [];
+    }
+  }
+  return guardadas.flatMap(({ libro, bookVersion }) =>
+    libro?.versionString && bookVersion && libro.versionString !== bookVersion
+      ? [{ bookKey: libro.$id, nombre: libro.name, guardada: bookVersion, actual: libro.versionString }]
+      : [],
+  );
+}
+
 function nombreFaccion(book: LibroDeOrigen): string {
   return book.factionName ?? book.name;
 }

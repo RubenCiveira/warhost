@@ -735,48 +735,54 @@ interface ForgeListShape {
 }
 
 /**
- * Reconstruye la composicion de un ejercito importado. Los identificadores de
- * unidad y de opcion son los mismos que usa nuestro catalogo, porque salen de
- * la misma fuente; las opciones que ya no existan se pierden, igual que se
- * pierden al importar.
+ * Las elecciones de un ejercito importado, como si las hubiera guardado el
+ * constructor. Sin mirar el catalogo, a proposito: una unidad que ya no este
+ * en el libro sigue aqui, en su sitio, y asi los indices siguen siendo los de
+ * las unidades resueltas al importar y se puede decir cual es la que falta.
  *
  * Una lista de Army Forge puede mezclar varias facciones: cada unidad trae su
  * propio `armyId` (el uid del libro de Army Forge del que viene), y
- * `uidToBookKey` lo traduce al `bookKey` de nuestro catalogo para saber en que
- * unidades de `units` buscarla.
+ * `uidToBookKey` lo traduce al `bookKey` de nuestro catalogo. Un uid que no
+ * conoce se queda con un `bookKey` vacio, que no casa con ninguna unidad.
+ */
+export function storedEntriesFromForgeList(raw: unknown, uidToBookKey: Map<string, string>): StoredEntry[] {
+  const list = (raw as ForgeListShape)?.list?.units;
+  if (!Array.isArray(list)) return [];
+  // Army Forge guarda una unidad combinada como **dos** selecciones: las dos
+  // con `combined`, y la segunda apuntando a la primera con `joinToUnit`. Esa
+  // segunda es la otra mitad, no otra unidad, y las mejoras van todas en la
+  // primera: importarla aparte duplicaria la unidad en la lista.
+  return list
+    .filter((forgeUnit) => !forgeUnit.joinToUnit)
+    .map((forgeUnit) => {
+      const choices: Record<string, number> = {};
+      for (const selected of forgeUnit.selectedUpgrades ?? []) {
+        if (!selected.optionId) continue;
+        choices[selected.optionId] = (choices[selected.optionId] ?? 0) + 1;
+      }
+      return {
+        bookKey: (forgeUnit.armyId && uidToBookKey.get(forgeUnit.armyId)) || "",
+        unitId: forgeUnit.id ?? "",
+        choices,
+        ...(forgeUnit.combined ? { combined: true } : {}),
+        ...(typeof forgeUnit.notes === "string" && forgeUnit.notes ? { notes: forgeUnit.notes } : {}),
+        ...(typeof forgeUnit.customName === "string" && forgeUnit.customName ? { customName: forgeUnit.customName } : {}),
+      };
+    });
+}
+
+/**
+ * Reconstruye la composicion de un ejercito importado. Los identificadores de
+ * unidad y de opcion son los mismos que usa nuestro catalogo, porque salen de
+ * la misma fuente; las unidades que ya no existan se pierden, igual que se
+ * pierden al importar.
  */
 export function entriesFromForgeList(
   raw: unknown,
   units: CatalogUnitLike[],
   uidToBookKey: Map<string, string>,
 ): BuilderEntry[] {
-  const list = (raw as ForgeListShape)?.list?.units;
-  if (!Array.isArray(list)) return [];
-  const byId = new Map(units.map((unit) => [claveEnLibro(unit.bookKey, unit.unitId), unit]));
-
-  return list.flatMap((forgeUnit, index) => {
-    // Army Forge guarda una unidad combinada como **dos** selecciones: las dos
-    // con `combined`, y la segunda apuntando a la primera con `joinToUnit`. Esa
-    // segunda es la otra mitad, no otra unidad, y las mejoras van todas en la
-    // primera: importarla aparte duplicaria la unidad en la lista.
-    if (forgeUnit.joinToUnit) return [];
-    const bookKey = forgeUnit.armyId ? uidToBookKey.get(forgeUnit.armyId) : undefined;
-    const unit = forgeUnit.id && bookKey ? byId.get(claveEnLibro(bookKey, forgeUnit.id)) : undefined;
-    if (!unit) return [];
-    const choices: Record<string, number> = {};
-    for (const selected of forgeUnit.selectedUpgrades ?? []) {
-      if (!selected.optionId) continue;
-      choices[selected.optionId] = (choices[selected.optionId] ?? 0) + 1;
-    }
-    return [
-      {
-        key: newKey(unit.unitId, index),
-        unit,
-        choices,
-        ...(forgeUnit.combined && sePuedeCombinar(unit) ? { combined: true } : {}),
-        ...(typeof forgeUnit.notes === "string" && forgeUnit.notes ? { notes: forgeUnit.notes } : {}),
-        ...(typeof forgeUnit.customName === "string" && forgeUnit.customName ? { customName: forgeUnit.customName } : {}),
-      },
-    ];
-  });
+  return rehydrateEntries(storedEntriesFromForgeList(raw, uidToBookKey), units).map(({ combined, ...entry }) =>
+    combined && sePuedeCombinar(entry.unit) ? { ...entry, combined } : entry,
+  );
 }

@@ -456,6 +456,16 @@ button.icon { padding: 4px 10px; min-width: 34px; letter-spacing: 0; }
 .banner.error { border-color: var(--danger); border-left-color: var(--danger); }
 .banner.ok { border-color: var(--ok); border-left-color: var(--ok); }
 
+/* Lista montada con otra version del libro: que cambia y como queda. */
+.aviso-migracion { border-left-color: var(--accent); }
+.aviso-migracion-titulo { margin: 0 0 6px; font-weight: 700; color: var(--accent); }
+.aviso-migracion summary { cursor: pointer; font-size: 0.9rem; }
+.aviso-migracion ul { margin: 8px 0; padding-left: 18px; }
+.aviso-migracion li { font-size: 0.85rem; line-height: 1.4; }
+.aviso-migracion li.warn { color: var(--danger); }
+.aviso-migracion p.small { margin: 6px 0; }
+.aviso-migracion button { margin-top: 6px; }
+
 .empty {
   text-align: center; padding: 56px 24px; color: var(--muted);
   border: 1px dashed var(--border-strong); border-radius: var(--plate-radius);

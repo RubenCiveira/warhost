@@ -283,6 +283,14 @@ export default function AddUnitWizard({
   const requiereClase = Boolean(entry && book && necesitaClaseDeHeroe(entry, sectionsConTiendaQuest, book.gameSystem));
   const faltaClase = requiereClase && !entry?.heroClassId;
   const quest = Boolean(book && isQuestSystem(book.gameSystem));
+  /**
+   * Las mejoras guardadas que el libro actual ya no ofrece: no salen en la
+   * carta, asi que no hay boton con el que quitarlas una a una. En quest se
+   * espera a las clases, sin ellas la tienda aun no esta y lo pareceria todo.
+   */
+  const ofrecidas = new Set(sectionsConTiendaQuest.flatMap((section) => (section.options ?? []).map(optionId)));
+  const obsoletas =
+    entry && (!quest || heroClasses.length > 0) ? Object.keys(entry.choices).filter((id) => !ofrecidas.has(id)) : [];
 
   const habilidadesParaHeroe = useCallback(
     (actual: BuilderEntry) => {
@@ -489,6 +497,26 @@ export default function AddUnitWizard({
               Personaliza <strong>{entry.unit.name}</strong>. Los limites de cada seccion son los del libro de{" "}
               {noun.singular}.
             </p>
+            {obsoletas.length > 0 ? (
+              <div className="banner aviso-migracion spread">
+                <span>
+                  {obsoletas.length === 1
+                    ? "Lleva una mejora que el libro actual ya no ofrece."
+                    : `Lleva ${obsoletas.length} mejoras que el libro actual ya no ofrece.`}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEntry({
+                      ...entry,
+                      choices: Object.fromEntries(Object.entries(entry.choices).filter(([id]) => ofrecidas.has(id))),
+                    })
+                  }
+                >
+                  Eliminar configuración obsoleta
+                </button>
+              </div>
+            ) : null}
             {controlesDeHeroeQuest(entry)}
             <div className="wizard-single">
               <UnitCard

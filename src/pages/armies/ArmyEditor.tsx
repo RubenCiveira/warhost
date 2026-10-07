@@ -35,7 +35,8 @@ import HeroSkillCard from "@rubenciveira/opr-kit/react/HeroSkillCard";
 import type { HeroSkillCardData } from "@rubenciveira/opr-kit/react/HeroSkillCard";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import AddUnitWizard from "../../components/AddUnitWizard";
-import { buildArmy, entriesFromForgeList, esHeroe, rehydrateEntries, serializeEntries } from "@rubenciveira/opr-kit/core/builder";
+import { buildArmy, esHeroe, optionId, rehydrateEntries, sectionsForEntry, serializeEntries, storedEntriesFromForgeList } from "@rubenciveira/opr-kit/core/builder";
+import { planDeMigracion } from "@rubenciveira/opr-kit/core/migracion";
 import type { StoredEntry } from "@rubenciveira/opr-kit/core/builder";
 import type { BuilderEntry, UpgradeSection } from "@rubenciveira/opr-kit/core/builder";
 import { catalogImageUrl, getBook, getBookByUid, groupImages, listBookImages, listBooks, listRuleGlossary, pickImageByType, targetKeyFor } from "../../api/catalog";
@@ -49,6 +50,7 @@ import { parseHabilidad } from "@rubenciveira/opr-kit/core/reglas";
 import RuleCard from "@rubenciveira/opr-kit/react/RuleCard";
 import ArmyPrintView from "@rubenciveira/opr-kit/react/ArmyPrintView";
 import AvisoComposicion from "../../components/AvisoComposicion";
+import AvisoMigracion from "../../components/AvisoMigracion";
 import {
   equipoDeEjercito,
   equipoDeFaccion,
@@ -63,7 +65,7 @@ import { listUnits as listCatalogUnits, listUpgradePackages } from "../../api/ca
 import { habilidadesInicialesQuest } from "@rubenciveira/opr-kit/core/questHero";
 import Tabs from "../../components/Tabs";
 import { parseSpells, reglasMencionadasEnHechizos } from "@rubenciveira/opr-kit/core/spells";
-import { composeArmyPayload, sourceBooks } from "../../lib/armyPayload";
+import { composeArmyPayload, librosDesfasados, sourceBooks } from "../../lib/armyPayload";
 import { useCobertura } from "../../lib/cobertura";
 import { listHeroClasses, listQuestShopPackages } from "../../api/content";
 import { questShopSectionsForEntry } from "@rubenciveira/opr-kit/core/questShop";
@@ -541,22 +543,20 @@ export default function ArmyEditor() {
    * escribe `composeArmyPayload` del mismo array—, asi que el `sortOrder` de
    * una carta es su indice aqui. Un ejercito importado de Army Forge no las
    * trae de fabrica, pero en cuanto se resuelven sus libros por uid se
-   * reconstruyen igual que en el constructor, a partir del JSON original de
-   * Army Forge.
+   * reconstruyen a partir del JSON original de Army Forge, con las unidades
+   * que ya no esten en el libro incluidas: asi el indice sigue siendo el de
+   * su carta.
    */
   const entradasGuardadas = useMemo<StoredEntry[]>(() => {
     if (!listJson) return [];
     try {
       const parsed = JSON.parse(listJson) as { entries?: unknown; raw?: unknown };
       if (Array.isArray(parsed.entries)) return parsed.entries as StoredEntry[];
-      if (parsed.raw && unidadesTodas.length > 0) {
-        return serializeEntries(entriesFromForgeList(parsed.raw, unidadesTodas, uidABookKey));
-      }
-      return [];
+      return parsed.raw ? storedEntriesFromForgeList(parsed.raw, uidABookKey) : [];
     } catch {
       return [];
     }
-  }, [listJson, unidadesTodas, uidABookKey]);
+  }, [listJson, uidABookKey]);
 
   const seccionesExtraQuest = useCallback(
     (entry: BuilderEntry, baseSections: UpgradeSection[]) =>
@@ -588,6 +588,47 @@ export default function ArmyEditor() {
     quest,
     seccionesExtraQuest,
     unidadesGuardadas,
+    unidadesTodas,
+  ]);
+  const desfasados = useMemo(() => librosDesfasados(listJson, librosConocidos), [listJson, librosConocidos]);
+  /**
+   * Que habria que cambiar para ajustar la lista al libro actual. Solo con el
+   * catalogo de todas sus facciones ya cargado: con una a medias, sus unidades
+   * saldrian como retiradas sin estarlo. En quest, ademas, la tienda comun.
+   */
+  const migracion = useMemo(() => {
+    const cargado =
+      librosConocidos.length > 0 &&
+      librosConocidos.every(
+        (libro) =>
+          unidadesPorLibro.has(libro.$id) && [...paquetesPorClave.keys()].some((clave) => clave.startsWith(`${libro.$id}:`)),
+      ) &&
+      (!quest || heroClasses.length > 0);
+    if (!cargado || entradasGuardadas.length === 0) return null;
+    return planDeMigracion({
+      guardadas: entradasGuardadas,
+      resueltas: unidadesGuardadas,
+      puntos: form.points,
+      miniaturas: form.modelCount,
+      units: unidadesTodas,
+      packages: paquetesPorClave,
+      defaultBookKey: librosConocidos.length === 1 ? librosConocidos[0].$id : undefined,
+      heroClasses,
+      gameSystem: form.gameSystem,
+      extraSections: seccionesExtraQuest,
+    });
+  }, [
+    entradasGuardadas,
+    form.gameSystem,
+    form.modelCount,
+    form.points,
+    heroClasses,
+    librosConocidos,
+    paquetesPorClave,
+    quest,
+    seccionesExtraQuest,
+    unidadesGuardadas,
+    unidadesPorLibro,
     unidadesTodas,
   ]);
   /**
@@ -985,6 +1026,79 @@ export default function ArmyEditor() {
     }
   }
 
+  /** Guarda en el borrador la lista ajustada al libro actual, con su version nueva. */
+  async function onAjustarAlLibro() {
+    if (!migracion) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const payload = composeArmyPayload(
+        migracion.entradas,
+        paquetesPorClave,
+        librosConocidos,
+        form.name,
+        form.listId,
+        heroClasses,
+        seccionesExtraQuest,
+      );
+      const destino = await conBorrador();
+      if (!destino) return;
+      const guardado = await saveDraft(destino.$id, payload);
+      setDraft(guardado);
+      setViendoBorrador(true);
+      mostrar(guardado);
+      setNotice("Lista ajustada al libro actual en el borrador. Pulsa Guardar para aplicarla.");
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * Quita de una sola unidad las mejoras que el libro actual ya no ofrece,
+   * sin tocar el resto de lo que propone `migracion`. La union se deja fuera
+   * al rehidratarla: sola no tiene a quien apuntar.
+   */
+  async function onQuitarObsoletas(indice: number, nombre: string) {
+    const { attachedTo: _union, ...guardada } = entradasGuardadas[indice];
+    const defaultBookKey = librosConocidos.length === 1 ? librosConocidos[0].$id : undefined;
+    const [entrada] = rehydrateEntries([guardada], unidadesTodas, defaultBookKey);
+    if (!entrada) return;
+    const ofrecidas = new Set(
+      sectionsForEntry(entrada, paquetesPorClave, seccionesExtraQuest).flatMap((section) => (section.options ?? []).map(optionId)),
+    );
+    const actualizadas = entradasGuardadas.map((previa, i) =>
+      i === indice
+        ? { ...previa, choices: Object.fromEntries(Object.entries(previa.choices ?? {}).filter(([id]) => ofrecidas.has(id))) }
+        : previa,
+    );
+    setBusy(true);
+    setError(null);
+    try {
+      const payload = composeArmyPayload(
+        rehydrateEntries(actualizadas, unidadesTodas, defaultBookKey),
+        paquetesPorClave,
+        librosConocidos,
+        form.name,
+        form.listId,
+        heroClasses,
+        seccionesExtraQuest,
+      );
+      const destino = await conBorrador();
+      if (!destino) return;
+      const guardado = await saveDraft(destino.$id, payload);
+      setDraft(guardado);
+      setViendoBorrador(true);
+      mostrar(guardado);
+      setNotice(`Configuracion obsoleta de ${nombre} eliminada en el borrador.`);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onAddUnit(
     nueva: BuilderEntry,
     book: ArmyBook,
@@ -1148,6 +1262,11 @@ export default function ArmyEditor() {
           <button type="button" onClick={() => setEditandoIndice(indice)}>
             Configurar
           </button>
+          {migracion?.pasos.some((paso) => paso.indice === indice && paso.tipo === "mejora-retirada") ? (
+            <button type="button" disabled={busy} onClick={() => void onQuitarObsoletas(indice, nombre)}>
+              Eliminar configuración obsoleta
+            </button>
+          ) : null}
           <button
             type="button"
             className="danger"
@@ -1423,6 +1542,16 @@ export default function ArmyEditor() {
           No se ha podido identificar de que faccion del catalogo viene {noun.demonstrative} {noun.singular}. Usa el
           buscador de faccion junto al boton de anadir para elegir una y empezar a anadir unidades.
         </p>
+      ) : null}
+
+      {army ? (
+        <AvisoMigracion
+          desfasados={desfasados}
+          migracion={migracion}
+          editable={editable}
+          busy={busy}
+          onAjustar={() => void onAjustarAlLibro()}
+        />
       ) : null}
 
       {draft && viendoBorrador ? (
