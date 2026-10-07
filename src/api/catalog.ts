@@ -316,8 +316,10 @@ export interface CatalogRule extends Row, CoreCatalogRule {
 export async function listRuleGlossary(gameSystem: GameSystemId): Promise<Map<string, CatalogRule>> {
   const glosario = new Map<string, CatalogRule>();
   let cursor: string | null = null;
+  // Paginas grandes: cada una espera a la anterior, asi que pocas es mejor.
+  const POR_PAGINA = 500;
   for (;;) {
-    const queries = [Query.equal("gameSystem", gameSystem), Query.limit(100)];
+    const queries = [Query.equal("gameSystem", gameSystem), Query.limit(POR_PAGINA)];
     if (cursor) queries.push(Query.cursorAfter(cursor));
     const page: { rows: CatalogRule[] } = await tables.listRows<CatalogRule>({
       databaseId: env.databaseId,
@@ -325,7 +327,7 @@ export async function listRuleGlossary(gameSystem: GameSystemId): Promise<Map<st
       queries,
     });
     for (const row of page.rows) glosario.set(row.name.toLowerCase(), row);
-    if (page.rows.length < 100) return glosario;
+    if (page.rows.length < POR_PAGINA) return glosario;
     cursor = page.rows[page.rows.length - 1].$id;
   }
 }

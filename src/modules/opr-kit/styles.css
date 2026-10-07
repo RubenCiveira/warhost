@@ -272,7 +272,7 @@
   font-family: var(--opr-label-font); font-weight: 700;
   letter-spacing: 0.05em; text-transform: var(--opr-band-transform); cursor: default;
 }
-.ucard-chip-liderazgo b { color: var(--opr-accent); font-size: 1.15em; }
+.ucard-chip-liderazgo b { color: inherit; font-size: 1.15em; }
 
 .ucard-accion { margin-top: auto; padding: 1.5mm 2.5mm 0; display: flex; justify-content: flex-end; gap: 1.2mm; }
 .ucard-accion button {
